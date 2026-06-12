@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="profile/borch_ai_banner.png" alt="borch-ai banner" width="100%">
+  <img src="https://raw.githubusercontent.com/borch-ai/.github/main/profile/borch_ai_banner.png" alt="borch-ai banner" width="100%">
 </p>
 
 # borch-ai
@@ -37,15 +37,36 @@ Our companion mobile frontend for remote pipeline monitoring and human-in-the-lo
 
 ```mermaid
 graph TD
-    A[Pithos CLI] -->|1. initiate| B(manifest.json)
-    A -->|2. brew| C[LLM Manuscript Gen]
-    C -->|Local Checkpoint| D[manuscript.md Review]
-    D -->|Edit & Resume| E[MCP Illustration Gen]
-    A -->|3. assemble| F[Print Layout Compilation]
-    A -->|4. deploy| G[Distribution & Cloud Export]
+    subgraph Powerword Ecosystem Hub
+        PW[Powerword CLI / Critic]
+        MCPS[MCP Server Registry]
+        T[Telemetry & Token Budgets]
+        PW --> MCPS
+        PW --> T
+    end
+
+    subgraph Pithos Runner Pipeline
+        P[Pithos CLI]
+        P -->|1. Initiate| M(manifest.json)
+        P -->|2. Brew| Stanzas[LLM Manuscript Gen]
+        P -->|3. Assemble| Layout[Print Layout Compilation]
+        P -->|4. Deploy| Cloud[Distribution & Cloud Export]
+    end
+
+    subgraph Lamplighter Frontend
+        LL[Lamplighter Mobile Monitor]
+    end
+
+    %% Interactions
+    P -->|Audit Diffs| PW
+    Stanzas -->|Markdown Review| Rev[manuscript.md]
+    Rev -->|Resume| P
+    P -->|Call Server Tools| MCPS
+    MCPS -->|Illustration Gen| Img[pw-mcp-imagegen]
+    Img -->|Copy Asset| P
     
-    E -.->|Telemetry| H[Powerword Critic]
-    H -.->|Real-time Audit| I[Lamplighter Mobile Monitor]
+    T -.->|Real-time Telemetry| LL
+    LL -.->|Human-in-the-Loop Approval| PW
 ```
 
 ---
