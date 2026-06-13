@@ -1,0 +1,67 @@
+name: Go CI (Standalone)
+# Reusable workflow for Go repos with no sibling replace directives.
+# Usage in caller:
+#   jobs:
+#     ci:
+#       uses: borch-ai/.github/.github/workflows/go-ci-standalone.yml@main
+#       secrets: inherit
+
+on:
+  workflow_call:
+    inputs:
+      coverage-threshold:
+        description: "Minimum unit test coverage percentage (default: 91)"
+        type: number
+        default: 91
+      golangci-lint-version:
+        description: "golangci-lint version to use"
+        type: string
+        default: "v2.12.2"
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lint:
+    name: Code Linting
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Run Linter
+        uses: golangci/golangci-lint-action@v9
+        with:
+          version: ${{ inputs.golangci-lint-version }}
+
+  security-and-test:
+    name: Security & Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Check Dependency Tidy Hygiene
+        run: make tidy && git diff --exit-code go.mod go.sum
+
+      - name: Run Vulnerability Scan
+        run: make vuln
+
+      - name: Run Tests & Check Coverage
+        run: make check-coverage
+
+      - name: Compile Binary
+        run: make build
