@@ -14,8 +14,14 @@ Welcome to **borch-ai**, a deterministic generative publishing ecosystem designe
 
 We build tooling that bridges deterministic pipelines, agentic workflows, and human-in-the-loop validation.
 
+### 🔥 [Kiln](https://github.com/borch-ai/kiln)
+The business orchestration layer. Kiln sits above Pithos and drives the full publishing lifecycle from market research to live KDP listing.
+- **Market Intelligence**: Scores niche candidates using Amazon Autocomplete, Google Trends, and Reddit sentiment via the Anxiety Index.
+- **Fake Door Validation**: Deploys ephemeral GitHub Pages landing pages and polls Plausible click-through rates before committing production resources.
+- **Forge & Deploy**: Orchestrates Pithos as a subprocess, tracks every book through the Foundry state machine (`scouted → validated → forged → deployed`), and uploads final assets to KDP.
+
 ### ⚓ [Pithos](https://github.com/borch-ai/pithos)
-A rigid, deterministic book orchestration pipeline that takes concepts from initiation to final distribution.
+A rigid, deterministic book factory pipeline that takes concepts from initiation to final distribution.
 - **Structured Pipeline**: Procedural execution through strictly sequenced states (`initiate` ➔ `brew` ➔ `assemble` ➔ `deploy`).
 - **Local Review Loops**: Seamless Markdown review/edit syncing (`manuscript.md`) to pause execution and allow off-line content refinement before illustration.
 - **MCP Native**: Plugs directly into Model Context Protocol (MCP) servers like `pw-mcp-imagegen` for automated, parallel asset generation.
@@ -24,7 +30,7 @@ A rigid, deterministic book orchestration pipeline that takes concepts from init
 The core MCP plugin repository and developer toolkit for local validation and auditing.
 - **Developer Critic**: Advanced workspace analyzers that validate branch changes against structured plans (`powerword review --local`).
 - **Telemetry & Cost Accounting**: Fine-grained token usage tracking, budget management, and model cost analysis.
-- **MCP Servers**: High-performance MCP servers for image generation, Amazon SEO optimization, and Google Docs integrations.
+- **MCP Servers**: High-performance MCP servers for image generation, Amazon SEO optimization, Google Docs integration, and market intelligence.
 
 ### 🏮 [Lamplighter](https://github.com/borch-ai/lamplighter)
 Our companion mobile frontend for remote pipeline monitoring and human-in-the-loop approvals.
@@ -37,7 +43,23 @@ Our companion mobile frontend for remote pipeline monitoring and human-in-the-lo
 
 ```mermaid
 graph TD
-    subgraph Powerword Ecosystem Hub
+    subgraph Kiln ["🔥 Kiln — Business Orchestration"]
+        K[Kiln CLI]
+        K -->|scout| Scout[Market Intelligence]
+        K -->|validate| FD[Fake Door Tests]
+        K -->|forge| P
+        K -->|deploy| KDP[Amazon KDP]
+    end
+
+    subgraph Pithos ["⚓ Pithos — Book Factory"]
+        P[Pithos CLI]
+        P -->|1. initiate| M(manifest.json)
+        P -->|2. brew| Stanzas[LLM Manuscript Gen]
+        P -->|3. assemble| Layout[Print Layout Compilation]
+        P -->|4. deploy| Cloud[Distribution & Cloud Export]
+    end
+
+    subgraph Powerword ["⚡ Powerword — MCP Plugin Hub"]
         PW[Powerword CLI / Critic]
         MCPS[MCP Server Registry]
         T[Telemetry & Token Budgets]
@@ -45,26 +67,21 @@ graph TD
         PW --> T
     end
 
-    subgraph Pithos Runner Pipeline
-        P[Pithos CLI]
-        P -->|1. Initiate| M(manifest.json)
-        P -->|2. Brew| Stanzas[LLM Manuscript Gen]
-        P -->|3. Assemble| Layout[Print Layout Compilation]
-        P -->|4. Deploy| Cloud[Distribution & Cloud Export]
+    subgraph Lamplighter ["🏮 Lamplighter — Mobile Monitor"]
+        LL[Lamplighter]
     end
 
-    subgraph Lamplighter Frontend
-        LL[Lamplighter Mobile Monitor]
-    end
+    %% Kiln consumes Powerword MCP plugins
+    Scout -->|pw-mcp-trends| MCPS
+    FD -->|pw-mcp-imagegen| MCPS
+    KDP -->|pw-mcp-seo| MCPS
 
-    %% Interactions
-    P -->|Audit Diffs| PW
-    Stanzas -->|Markdown Review| Rev[manuscript.md]
-    Rev -->|Resume| P
-    P -->|Call Server Tools| MCPS
-    MCPS -->|Illustration Gen| Img[pw-mcp-imagegen]
-    Img -->|Copy Asset| P
-    
+    %% Pithos consumes Powerword MCP plugins
+    Stanzas -->|manuscript.md review| Rev[Local Review Loop]
+    Rev -->|resume| P
+    P -->|pw-mcp-imagegen| MCPS
+
+    %% Telemetry to Lamplighter
     T -.->|Real-time Telemetry| LL
     LL -.->|Human-in-the-Loop Approval| PW
 ```
@@ -73,17 +90,25 @@ graph TD
 
 ## 🚀 Getting Started
 
-To initialize a new book workspace and run the pipeline locally:
+To run the full publishing pipeline locally, you need all four tools. The entry point is **Kiln**:
 
 ```bash
-# 1. Install Pithos and Powerword tools
+# 1. Install the toolchain
+go install github.com/borch-ai/kiln/cmd/kiln@latest
 go install github.com/borch-ai/pithos/cmd/pithos@latest
+go install github.com/borch-ai/powerword/cmd/powerword@latest
 
-# 2. Initiate a new project
-pithos initiate --theme "A journey through agentic coding" --pages 12 --output ./my-book
+# 2. Scout for a niche
+kiln scout
 
-# 3. Run the manuscript generation and enter the review loop
-pithos brew --review --output ./my-book
+# 3. Validate the top candidate with a Fake Door test
+kiln validate <book-id>
+
+# 4. Forge the book via Pithos
+kiln forge <book-id>
+
+# 5. Deploy to KDP
+kiln deploy <book-id>
 ```
 
 ---
