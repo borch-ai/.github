@@ -1,8 +1,6 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/borch-ai/.github/main/profile/borch_ai_banner.png" alt="borch-ai banner" width="100%">
-</p>
+![borch-ai](https://raw.githubusercontent.com/borch-ai/.github/main/profile/borch_ai_banner.png)
 
-# <img src="https://raw.githubusercontent.com/borch-ai/.github/main/profile/borch_ai_logo.png" align="right" width="120" alt="borch-ai logo"> borch-ai
+# borch-ai
 
 > Generative Book Orchestration Ecosystem for AI Agents
 
