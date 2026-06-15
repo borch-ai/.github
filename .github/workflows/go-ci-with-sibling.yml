@@ -27,10 +27,6 @@ on:
         description: "Local path to check out this repo into (default: name of calling repo)"
         type: string
         required: true
-      golangci-lint-version:
-        description: "golangci-lint version to use"
-        type: string
-        default: "v2.12.2"
 
 permissions:
   contents: read
@@ -70,11 +66,14 @@ jobs:
             ${{ inputs.repo-path }}/go.sum
             ${{ inputs.sibling-path }}/go.sum
 
+      - name: Install powerword
+        run: |
+          cd ${{ inputs.sibling-path }}
+          go install ./cmd/powerword
+
       - name: Run Linter
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: ${{ inputs.golangci-lint-version }}
-          working-directory: ${{ inputs.repo-path }}
+        working-directory: ${{ inputs.repo-path }}
+        run: make lint
 
   security-and-test:
     name: Security & Tests
