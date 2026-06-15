@@ -13,10 +13,6 @@ on:
         description: "Minimum unit test coverage percentage (default: 91)"
         type: number
         default: 91
-      golangci-lint-version:
-        description: "golangci-lint version to use"
-        type: string
-        default: "v2.12.2"
 
 permissions:
   contents: read
@@ -36,10 +32,11 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Install powerword
+        run: GOPRIVATE=github.com/borch-ai/* go install github.com/borch-ai/powerword/cmd/powerword@latest
+
       - name: Run Linter
-        uses: golangci/golangci-lint-action@v9
-        with:
-          version: ${{ inputs.golangci-lint-version }}
+        run: make lint
 
   security-and-test:
     name: Security & Tests
