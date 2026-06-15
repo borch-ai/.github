@@ -88,7 +88,7 @@ graph TD
 
 ## 🚀 Getting Started
 
-To run the full publishing pipeline locally, you need all four tools. The entry point is **Kiln**:
+To run the full publishing pipeline locally, you need the three CLI tools. The entry point is **Kiln**:
 
 ```bash
 # 1. Install the toolchain
