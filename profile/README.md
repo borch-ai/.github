@@ -83,10 +83,8 @@ graph TD
         LL[Lamplighter]
     end
 
-    %% Kiln orchestrates both factories
-    K -->|forge book| P
+    %% Kiln orchestrates Aeolian (book pipeline already wired inside Kiln subgraph)
     K -->|forge media| A
-    K -->|deploy| KDP[Amazon KDP]
 
     %% Kiln consumes Powerword MCP plugins
     Scout -->|pw-mcp-trends| MCPS
@@ -111,7 +109,7 @@ graph TD
 
 ## 🚀 Getting Started
 
-To run the full publishing pipeline locally, you need the three CLI tools. The entry point is **Kiln**:
+To run the full publishing pipeline locally, you need the four CLI tools. The entry point is **Kiln**:
 
 ```bash
 # 1. Install the toolchain
