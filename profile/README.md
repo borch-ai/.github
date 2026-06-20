@@ -109,7 +109,6 @@ graph TD
     D -.->|analyze & refactor| A
     D -.->|analyze & refactor| PW
     D -.->|analyze & refactor| LH
-
     %% Kiln orchestrates Aeolian (book pipeline already wired inside Kiln subgraph)
     K -->|forge media| A
 
