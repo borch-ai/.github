@@ -46,11 +46,20 @@ jobs:
           go-version-file: 'go.mod'
           cache: true
 
-      # Initialize CodeQL tools
-      - name: Initialize CodeQL
+      # Initialize CodeQL tools for PRs (standard query suite for speed)
+      - name: Initialize CodeQL (PR)
+        if: github.event_name == 'pull_request'
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ inputs.language }}
+
+      # Initialize CodeQL tools for pushes and schedules (complete/extended query suite)
+      - name: Initialize CodeQL (Push/Schedule)
+        if: github.event_name != 'pull_request'
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ inputs.language }}
+          queries: security-extended
 
       # Compile code automatically
       - name: Autobuild
