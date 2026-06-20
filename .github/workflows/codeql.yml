@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       language:
-        description: "Language to analyze"
+        description: "Language to analyze (supported: c-cpp, csharp, go, java-kotlin, javascript-typescript, python, ruby, swift)"
         type: string
         default: "go"
 
@@ -19,6 +19,21 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Validate language input
+        run: |
+          ALLOWED="c-cpp csharp go java-kotlin javascript-typescript python ruby swift"
+          VALID=false
+          for lang in $ALLOWED; do
+            if [ "$lang" = "${{ inputs.language }}" ]; then
+              VALID=true
+              break
+            fi
+          done
+          if [ "$VALID" = "false" ]; then
+            echo "::error::Unsupported language '${{ inputs.language }}'. Must be one of: $ALLOWED"
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@v6
 
