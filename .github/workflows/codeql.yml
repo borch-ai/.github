@@ -9,6 +9,7 @@ on:
         default: "go"
 
 permissions:
+  actions: read
   contents: read
   security-events: write
 
