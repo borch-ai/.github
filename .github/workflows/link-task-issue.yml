@@ -1,0 +1,74 @@
+name: Link Task Issue (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      sibling-repo:
+        description: "Sibling repo containing powerword cmd (default: borch-ai/powerword)"
+        type: string
+        default: "borch-ai/powerword"
+      sibling-path:
+        description: "Local path to check out the sibling repo"
+        type: string
+        default: "powerword"
+      repo-path:
+        description: "Local path to check out the calling repository"
+        type: string
+        default: "repo"
+      pr-number:
+        description: "Pull request number"
+        type: number
+        required: true
+      base-ref:
+        description: "Base branch ref"
+        type: string
+        required: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  link-issue:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Calling Repository
+        uses: actions/checkout@v6
+        with:
+          path: ${{ inputs.repo-path }}
+          fetch-depth: 0
+
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout Sibling (${{ inputs.sibling-repo }})
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.sibling-repo }}
+          path: ${{ inputs.sibling-path }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ${{ inputs.sibling-path }}/go.mod
+          cache: true
+
+      - name: Build powerword
+        run: |
+          cd ${{ inputs.sibling-path }}
+          go build -o /tmp/powerword ./cmd/powerword
+
+      - name: Run Issue Linking Command
+        working-directory: ${{ inputs.repo-path }}
+        env:
+          PR_NUMBER: ${{ inputs.pr-number }}
+          BASE_REF: ${{ inputs.base-ref }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: /tmp/powerword link-issue
