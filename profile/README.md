@@ -2,9 +2,9 @@
 
 # borch-ai
 
-> Generative Book Orchestration Ecosystem for AI Agents
+> Generative Media & Publishing Orchestration for AI Agents
 
-Welcome to **borch-ai**, a deterministic generative publishing ecosystem designed to orchestrate complex book writing, illustration, and validation pipelines with absolute reliability.
+Welcome to **borch-ai**, a deterministic generative publishing and media ecosystem designed to orchestrate complex book writing, music production, illustration, and validation pipelines with absolute reliability.
 
 ---
 
@@ -35,6 +35,13 @@ Our companion mobile frontend for remote pipeline monitoring and human-in-the-lo
 - **Real-time Monitoring**: Track compilation logs, token costs, and illustration outputs directly from your phone.
 - **Human-in-the-Loop**: Approve or request rewrites of stanzas/images on-the-fly to ensure publishing quality.
 
+### 🎵 [Aeolian](https://github.com/borch-ai/aeolian)
+The automated music and media factory. Aeolian translates market anxiety signals from Kiln into royalty-free, long-form audio-visual content.
+- **Algorithmic Composition**: Procedurally generates multi-track MIDI arrangements (drums, bass, chords, leads) in any key and scale — zero AI audio API costs.
+- **Audio Synthesis**: Renders MIDI into high-quality WAV/MP3 via FluidSynth and customizable Soundfonts.
+- **Dynamic Visuals**: Generates parallax looping video backgrounds via `pw-mcp-imagegen` and compiles multi-hour MP4 videos via ffmpeg.
+- **Lazy-Max Publishing**: Deploys directly to YouTube and digital music distributors with zero manual editing or uploading.
+
 ---
 
 ## 📐 Core Architecture
@@ -57,6 +64,13 @@ graph TD
         P -->|4. deploy| Cloud[Distribution & Cloud Export]
     end
 
+    subgraph Aeolian ["🎵 Aeolian — Media Factory"]
+        A[Aeolian CLI]
+        A -->|aeolian compose| MidiGen[MIDI Composition]
+        A -->|aeolian render| VideoGen[Video Render]
+        A -->|aeolian deploy| Streaming[YouTube / DistroKid]
+    end
+
     subgraph Powerword ["⚡ Powerword — MCP Plugin Hub"]
         PW[Powerword CLI / Critic]
         MCPS[MCP Server Registry]
@@ -69,6 +83,9 @@ graph TD
         LL[Lamplighter]
     end
 
+    %% Kiln orchestrates Aeolian (book pipeline already wired inside Kiln subgraph)
+    K -->|forge media| A
+
     %% Kiln consumes Powerword MCP plugins
     Scout -->|pw-mcp-trends| MCPS
     FD -->|pw-mcp-imagegen| MCPS
@@ -79,6 +96,10 @@ graph TD
     Rev -->|resume| P
     P -->|pw-mcp-imagegen| MCPS
 
+    %% Aeolian consumes Powerword MCP plugins
+    VideoGen -->|pw-mcp-imagegen| MCPS
+    Streaming -->|pw-mcp-youtube| MCPS
+
     %% Telemetry to Lamplighter
     T -.->|Real-time Telemetry| LL
     LL -.->|Human-in-the-Loop Approval| PW
@@ -88,12 +109,13 @@ graph TD
 
 ## 🚀 Getting Started
 
-To run the full publishing pipeline locally, you need the three CLI tools. The entry point is **Kiln**:
+To run the full publishing pipeline locally, you need the four CLI tools. The entry point is **Kiln**:
 
 ```bash
 # 1. Install the toolchain
 go install github.com/borch-ai/kiln/cmd/kiln@latest
 go install github.com/borch-ai/pithos/cmd/pithos@latest
+go install github.com/borch-ai/aeolian/cmd/aeolian@latest
 go install github.com/borch-ai/powerword/cmd/powerword@latest
 
 # 2. Scout for a niche

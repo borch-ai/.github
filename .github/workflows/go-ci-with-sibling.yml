@@ -27,6 +27,10 @@ on:
         description: "Local path to check out this repo into (default: name of calling repo)"
         type: string
         required: true
+      coverage-threshold:
+        description: "Minimum unit test coverage percentage (default: 91)"
+        type: number
+        default: 91
 
 permissions:
   contents: read
@@ -118,6 +122,8 @@ jobs:
 
       - name: Run Tests & Check Coverage
         working-directory: ${{ inputs.repo-path }}
+        env:
+          COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}
         run: make check-coverage
 
       - name: Compile Binary
