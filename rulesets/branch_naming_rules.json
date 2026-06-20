@@ -8,8 +8,15 @@
         "refs/heads/**"
       ],
       "exclude": [
-        "refs/heads/main"
+        "~DEFAULT_BRANCH"
       ]
+    },
+    "repository_name": {
+      "include": [
+        "~ALL"
+      ],
+      "exclude": [],
+      "protected": false
     }
   },
   "rules": [

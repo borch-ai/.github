@@ -15,6 +15,14 @@ on:
         description: "Local path to check out the calling repository"
         type: string
         default: "repo"
+      pr-number:
+        description: "Pull request number"
+        type: number
+        required: true
+      base-ref:
+        description: "Base branch ref"
+        type: string
+        required: true
 
 permissions:
   pull-requests: write
@@ -60,7 +68,7 @@ jobs:
       - name: Run Issue Linking Command
         working-directory: ${{ inputs.repo-path }}
         env:
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_NUMBER: ${{ inputs.pr-number }}
+          BASE_REF: ${{ inputs.base-ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: /tmp/powerword link-issue
