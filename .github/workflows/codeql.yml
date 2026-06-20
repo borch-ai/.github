@@ -1,0 +1,62 @@
+name: CodeQL (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      language:
+        description: "Language to analyze (supported: c-cpp, csharp, go, java-kotlin, javascript-typescript, python, ruby, swift)"
+        type: string
+        default: "go"
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Validate language input
+        run: |
+          ALLOWED="c-cpp csharp go java-kotlin javascript-typescript python ruby swift"
+          VALID=false
+          for lang in $ALLOWED; do
+            if [ "$lang" = "${{ inputs.language }}" ]; then
+              VALID=true
+              break
+            fi
+          done
+          if [ "$VALID" = "false" ]; then
+            echo "::error::Unsupported language '${{ inputs.language }}'. Must be one of: $ALLOWED"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      # Set up Go with automatic dependency caching
+      - name: Set up Go
+        if: ${{ inputs.language == 'go' }}
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      # Initialize CodeQL tools
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ inputs.language }}
+
+      # Compile code automatically
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v4
+
+      # Perform the analysis
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:${{ inputs.language }}"
