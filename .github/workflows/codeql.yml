@@ -32,18 +32,16 @@ jobs:
 
       # Initialize CodeQL tools
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ inputs.language }}
-          # Standard queries for fast review execution
-          queries: security-auditing
 
       # Compile code automatically
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       # Perform the analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ inputs.language }}"
