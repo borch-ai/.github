@@ -15,7 +15,7 @@ We build tooling that bridges deterministic pipelines, agentic workflows, and hu
 ### 🔥 [Kiln](https://github.com/borch-ai/kiln)
 The business orchestration layer. Kiln sits above Pithos and drives the full publishing lifecycle from market research to live KDP listing.
 - **Market Intelligence**: Scores niche candidates using Amazon Autocomplete, Google Trends, and Reddit sentiment via the Anxiety Index.
-- **Fake Door Validation**: Deploys ephemeral GitHub Pages landing pages and polls Plausible click-through rates before committing production resources.
+- **Fake Door Validation**: Deploys ephemeral GitHub Pages landing pages and polls click-through rates (via Lighthouse or Plausible) before committing production resources.
 - **Forge & Deploy**: Orchestrates Pithos as a subprocess, tracks every book through the Foundry state machine (`scouted → validated → forged → deployed`), and uploads final assets to KDP.
 
 ### ⚓ [Pithos](https://github.com/borch-ai/pithos)
@@ -41,6 +41,11 @@ The automated music and media factory. Aeolian translates market anxiety signals
 - **Audio Synthesis**: Renders MIDI into high-quality WAV/MP3 via FluidSynth and customizable Soundfonts.
 - **Dynamic Visuals**: Generates parallax looping video backgrounds via `pw-mcp-imagegen` and compiles multi-hour MP4 videos via ffmpeg.
 - **Lazy-Max Publishing**: Deploys directly to YouTube and digital music distributors with zero manual editing or uploading.
+
+### 🗼 [Lighthouse](https://github.com/borch-ai/lighthouse)
+The unified stack-wide telemetry sink and privacy-first web analytics platform.
+- **Cookie-Free Web Analytics**: Implements a GDPR-compliant aggregate API to track conversion rates on validation landing pages.
+- **Consolidated Telemetry**: Ingests token metrics, financial API expenses, exception errors, and feature engagement from all components.
 
 ---
 
@@ -79,6 +84,12 @@ graph TD
         PW --> T
     end
 
+    subgraph Lighthouse ["🗼 Lighthouse — Telemetry & Analytics"]
+        LH[Lighthouse Server]
+        LDB[(DuckDB Database)]
+        LH <--> LDB
+    end
+
     subgraph Lamplighter ["🏮 Lamplighter — Mobile Monitor"]
         LL[Lamplighter]
     end
@@ -100,8 +111,15 @@ graph TD
     VideoGen -->|pw-mcp-imagegen| MCPS
     Streaming -->|pw-mcp-youtube| MCPS
 
-    %% Telemetry to Lamplighter
-    T -.->|Real-time Telemetry| LL
+    %% Telemetry & Analytics ingestion into Lighthouse
+    T -->|telemetry| LH
+    P -->|telemetry| LH
+    A -->|telemetry| LH
+    FD -->|visitor metrics| LH
+
+    %% Data querying & display
+    LH -->|CTR stats| K
+    LH -.->|consolidated metrics| LL
     LL -.->|Human-in-the-Loop Approval| PW
 ```
 
@@ -109,7 +127,7 @@ graph TD
 
 ## 🚀 Getting Started
 
-To run the full publishing pipeline locally, you need the four CLI tools. The entry point is **Kiln**:
+To run the full publishing pipeline locally, you need the CLI tools. The entry point is **Kiln**:
 
 ```bash
 # 1. Install the toolchain
@@ -117,6 +135,7 @@ go install github.com/borch-ai/kiln/cmd/kiln@latest
 go install github.com/borch-ai/pithos/cmd/pithos@latest
 go install github.com/borch-ai/aeolian/cmd/aeolian@latest
 go install github.com/borch-ai/powerword/cmd/powerword@latest
+go install github.com/borch-ai/lighthouse/cmd/lighthouse@latest
 
 # 2. Scout for a niche
 kiln scout
@@ -136,3 +155,4 @@ kiln deploy <book-id>
 <p align="center">
   <sub>Built with ❤️ by the borch-ai team. Code quality audited by <b>Powerword Critic</b>.</sub>
 </p>
+
