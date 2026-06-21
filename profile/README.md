@@ -15,7 +15,7 @@ We build tooling that bridges deterministic pipelines, agentic workflows, and hu
 ### 🔥 [Kiln](https://github.com/borch-ai/kiln)
 The business orchestration layer. Kiln sits above Pithos and drives the full publishing lifecycle from market research to live KDP listing.
 - **Market Intelligence**: Scores niche candidates using Amazon Autocomplete, Google Trends, and Reddit sentiment via the Anxiety Index.
-- **Fake Door Validation**: Deploys ephemeral GitHub Pages landing pages and polls Plausible click-through rates before committing production resources.
+- **Fake Door Validation**: Deploys ephemeral GitHub Pages landing pages and polls click-through rates (via Lighthouse or Plausible) before committing production resources.
 - **Forge & Deploy**: Orchestrates Pithos as a subprocess, tracks every book through the Foundry state machine (`scouted → validated → forged → deployed`), and uploads final assets to KDP.
 
 ### ⚓ [Pithos](https://github.com/borch-ai/pithos)
@@ -86,7 +86,7 @@ graph TD
 
     subgraph Lighthouse ["🗼 Lighthouse — Telemetry & Analytics"]
         LH[Lighthouse Server]
-        LDB[(SQLite WAL)]
+        LDB[(SQLite Database)]
         LH <--> LDB
     end
 
