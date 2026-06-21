@@ -86,7 +86,7 @@ graph TD
 
     subgraph Lighthouse ["🗼 Lighthouse — Telemetry & Analytics"]
         LH[Lighthouse Server]
-        LDB[(SQLite Database)]
+        LDB[(DuckDB Database)]
         LH <--> LDB
     end
 
