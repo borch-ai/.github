@@ -1,0 +1,35 @@
+name: Daedalus Ecosystem Scan
+
+on:
+  workflow_call:
+    inputs:
+      scan_level:
+        description: 'Level of scan (basic, deep)'
+        required: false
+        default: 'basic'
+        type: string
+
+jobs:
+  analyze:
+    name: Run Daedalus Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+
+      - name: Install Daedalus
+        run: go install github.com/borch-ai/daedalus/cmd/daedalus@latest
+
+      - name: Execute Daedalus Scan
+        run: daedalus scan --level ${{ inputs.scan_level }} --report-only
+
+      - name: Upload Health Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecosystem-health-report
+          path: daedalus-report.md
