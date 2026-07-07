@@ -1,1 +1,8 @@
 blank_issues_enabled: false
+contact_links:
+  - name: Security Vulnerability
+    url: mailto:security@sinope.press
+    about: Report a security vulnerability privately (do not open a public issue)
+  - name: General Support & Questions
+    url: https://github.com/orgs/borch-ai/discussions
+    about: Ask questions and get help from the community
