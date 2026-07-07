@@ -7,6 +7,14 @@ on:
         description: "Language to analyze (supported: c-cpp, csharp, go, java-kotlin, javascript-typescript, python, ruby, swift)"
         type: string
         default: "go"
+      build-mode:
+        description: "Build mode to use (autobuild, manual, none)"
+        type: string
+        default: "autobuild"
+      build-command:
+        description: "Custom build command to compile code (only used if build-mode is set to manual)"
+        type: string
+        required: false
 
 permissions:
   actions: read
@@ -52,6 +60,7 @@ jobs:
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ inputs.language }}
+          build-mode: ${{ inputs.build-mode }}
 
       # Initialize CodeQL tools for pushes and schedules (complete/extended query suite)
       - name: Initialize CodeQL (Push/Schedule)
@@ -60,10 +69,17 @@ jobs:
         with:
           languages: ${{ inputs.language }}
           queries: security-extended
+          build-mode: ${{ inputs.build-mode }}
 
-      # Compile code automatically
+      # Compile code automatically using Autobuild (if build-mode is autobuild)
       - name: Autobuild
+        if: ${{ inputs.build-mode == 'autobuild' }}
         uses: github/codeql-action/autobuild@v4
+
+      # Compile code using custom build command (if build-mode is manual)
+      - name: Custom Build
+        if: ${{ inputs.build-mode == 'manual' && inputs.build-command }}
+        run: ${{ inputs.build-command }}
 
       # Perform the analysis
       - name: Perform CodeQL Analysis
