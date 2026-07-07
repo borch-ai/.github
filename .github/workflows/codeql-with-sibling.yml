@@ -1,0 +1,87 @@
+name: CodeQL (With Sibling)
+# Reusable CodeQL workflow for Go repos that have a replace directive pointing
+# to a sibling borch-ai repo (e.g. pithos → powerword). Both repos are checked
+# out into parallel directories so the replace directive resolves correctly
+# before the CodeQL manual build runs.
+#
+# Usage in caller:
+#   jobs:
+#     analyze-go:
+#       uses: borch-ai/.github/.github/workflows/codeql-with-sibling.yml@main
+#       secrets: inherit
+#       with:
+#         sibling-repo: borch-ai/powerword
+#         sibling-path: powerword
+#         repo-path: pithos
+
+on:
+  workflow_call:
+    inputs:
+      sibling-repo:
+        description: "Full name of the sibling repo to check out (e.g. borch-ai/powerword)"
+        type: string
+        required: true
+      sibling-path:
+        description: "Local path to check out the sibling repo into (e.g. powerword)"
+        type: string
+        required: true
+      repo-path:
+        description: "Local path to check out this repo into (e.g. pithos)"
+        type: string
+        required: true
+
+permissions:
+  actions: read
+  contents: read
+  security-events: write
+
+jobs:
+  analyze:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          path: ${{ inputs.repo-path }}
+
+      - name: Generate GitHub App Token
+        uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout sibling (${{ inputs.sibling-repo }})
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ inputs.sibling-repo }}
+          path: ${{ inputs.sibling-path }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version-file: ${{ inputs.repo-path }}/go.mod
+          cache: true
+          cache-dependency-path: |
+            ${{ inputs.repo-path }}/go.sum
+            ${{ inputs.sibling-path }}/go.sum
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: go
+          build-mode: manual
+
+      - name: Build
+        working-directory: ${{ inputs.repo-path }}
+        run: make build
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:go"
