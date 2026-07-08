@@ -172,4 +172,3 @@ kiln deploy <book-id>
 <p align="center">
   <sub>Built with ❤️ by the borch-ai team. Code quality audited by <b>Powerword Critic</b>.</sub>
 </p>
-
