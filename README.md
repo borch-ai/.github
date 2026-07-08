@@ -17,6 +17,7 @@ This repository acts as the **Central Nexus & Configuration Registry** for the `
 ├── CODEOWNERS                # Shared repository ownership assignments
 └── .github/
     ├── workflows/            # Reusable GitHub Actions Workflows
+    │   ├── ci-self-test.yml         # Self-test validation of workflows
     │   ├── go-ci-with-sibling.yml   # Go project testing with a sibling package
     │   ├── go-ci-standalone.yml     # Standalone Go project testing
     │   ├── pr-title.yml             # Conventional Commit title verification

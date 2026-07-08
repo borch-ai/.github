@@ -1,4 +1,4 @@
-![borch-ai](https://raw.githubusercontent.com/borch-ai/.github/main/profile/borch_ai_banner.png)
+![borch-ai](borch_ai_banner.png)
 
 # borch-ai
 
@@ -139,6 +139,12 @@ graph TD
     LH -.->|consolidated metrics| LL
     LL -.->|Human-in-the-Loop Approval| PW
 ```
+
+## 📈 Live Market Intelligence (Daily Niche Scout)
+
+<!-- KILN_SCOUT_START -->
+_No active niche scout data available. Data is automatically scanned and injected daily by the [Task 1.2](https://github.com/borch-ai/.github/blob/main/plans/phase_1/task_1_2_kiln_market_scout_dashboard.md) workflow._
+<!-- KILN_SCOUT_END -->
 
 ---
 

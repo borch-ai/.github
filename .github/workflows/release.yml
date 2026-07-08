@@ -19,13 +19,13 @@ jobs:
 
       - name: Bump version and push tag
         id: tag_version
-        uses: mathieudutour/github-tag-action@a22cbd0877220747b85d03f115fa7751e345e5f5 # v6.2
+        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b # v6.2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: patch # Fallback if no conventional commit prefix is found
 
       - name: Create a GitHub Release
-        uses: ncipollo/release-action@2c2df4e7aa22c8104142d8c196b6d5f782a201f9 # v1.14.0
+        uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5 # v1.14.0
         with:
           tag: ${{ steps.tag_version.outputs.new_tag }}
           name: Release ${{ steps.tag_version.outputs.new_tag }}

@@ -12,9 +12,14 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **release.yml**: New workflow that automates version tagging and creates GitHub Releases on pushes to `main`.
 - **ci-self-test.yml**: New workflow that validates all workflow YAML files in this repo using `yamllint` and `actionlint` on every PR touching `.github/workflows/`.
 - **ISSUE_TEMPLATE/bug.yml**: Structured bug report form with required fields for affected repo, description, and reproduction steps.
 - **CODEOWNERS**: Requires review from `@borch-ai/platform` for changes to any workflow file.
+
+### Fixed
+
+- **release.yml**: Corrected invalid commit SHAs for `mathieudutour/github-tag-action` and `ncipollo/release-action` which caused post-merge workflow execution failures.
 
 ### Changed
 
