@@ -43,12 +43,11 @@ jobs:
               brackets: disable
               comments: disable
 
-      - name: Install actionlint
-        run: |
-          bash <(curl -sL https://raw.githubusercontent.com/rhysd/actionlint/03d0035246f3e81f36aed592ffb4bebf33a03106/scripts/download-actionlint.bash) 1.7.7
-
       - name: Run actionlint
-        run: ./actionlint -color .github/workflows/*.yml
+        uses: reviewdog/action-actionlint@5eaffa19a1991ecc52b11eddcdd57760d1ac7e3d # v1.72.0
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          fail_level: error
 
   pr-title:
     name: Validate PR Title
