@@ -1,0 +1,33 @@
+name: Release and Tag
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write # Required to push tags/create releases
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+        with:
+          fetch-depth: 0 # Required to view git history for tags
+
+      - name: Bump version and push tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@a22cbd0877220747b85d03f115fa7751e345e5f5 # v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch # Fallback if no conventional commit prefix is found
+
+      - name: Create a GitHub Release
+        uses: ncipollo/release-action@2c2df4e7aa22c8104142d8c196b6d5f782a201f9 # v1.14.0
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          token: ${{ secrets.GITHUB_TOKEN }}
