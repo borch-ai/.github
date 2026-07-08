@@ -1,0 +1,42 @@
+name: Lint Markdown Files
+# Reusable workflow for linting markdown files across the borch-ai organization.
+# Usage in caller:
+#   jobs:
+#     markdown-lint:
+#       uses: borch-ai/.github/.github/workflows/markdown-lint.yml@main
+
+on:
+  workflow_call:
+    inputs:
+      globs:
+        description: 'Glob patterns for files to lint'
+        required: false
+        type: string
+        default: '**/*.md'
+
+permissions:
+  contents: read
+
+jobs:
+  markdown-lint:
+    name: Lint Markdown
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download Central Lint Configuration
+        run: |
+          if [ ! -f ".markdownlint.json" ]; then
+            curl -sSLo .markdownlint.json "https://raw.githubusercontent.com/borch-ai/.github/main/.markdownlint.json"
+          fi
+
+      - name: Run markdownlint
+        uses: DavidAnson/markdownlint-cli2-action@b4c9feab76d8025d1e83c653fa3990936df0e6c8 # v16.0.0
+        with:
+          globs: ${{ inputs.globs }}
