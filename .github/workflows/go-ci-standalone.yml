@@ -100,7 +100,7 @@ jobs:
 
       - name: Install powerword
         if: env.CI_APP_ID != ''
-        run: GOPRIVATE=github.com/borch-ai/* go install github.com/borch-ai/powerword/cmd/powerword@latest
+        run: GOPRIVATE="github.com/borch-ai/*" go install github.com/borch-ai/powerword/cmd/powerword@latest
 
       - name: Run Linter
         run: make lint
