@@ -1,0 +1,56 @@
+name: Validate PR Description
+# Reusable workflow for enforcing PR description format against the borch-ai template.
+# Usage in caller:
+#   jobs:
+#     pr-description:
+#       uses: borch-ai/.github/.github/workflows/pr-description.yml@main
+
+on:
+  workflow_call:
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate-description:
+    name: Validate PR Description
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
+      - name: Check PR Body for Required Headings
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if [[ -z "$PR_BODY" ]]; then
+            echo "::error::PR body is empty. Please follow the PR template."
+            exit 1
+          fi
+
+          # Define the required headings from pull_request_template.md
+          REQUIRED_HEADINGS=(
+            "## Overview"
+            "## Changes"
+            "## Verification"
+            "## Related Issues"
+          )
+
+          MISSING_HEADINGS=0
+          for heading in "${REQUIRED_HEADINGS[@]}"; do
+            # Use grep with -E to allow for trailing spaces or slight variations if needed, 
+            # but strict match to start of line is safer.
+            if ! echo "$PR_BODY" | grep -q "^${heading}"; then
+              echo "::error::Missing required heading in PR description: ${heading}"
+              MISSING_HEADINGS=1
+            fi
+          done
+
+          if [ $MISSING_HEADINGS -ne 0 ]; then
+            echo "::error::PR description does not match the required template format. Ensure it contains: ## Overview, ## Changes, ## Verification, ## Related Issues."
+            exit 1
+          fi
+          
+          echo "PR description format is valid."
