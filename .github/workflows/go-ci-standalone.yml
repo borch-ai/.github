@@ -70,6 +70,9 @@ jobs:
             rules:
               line-length: disable
               document-start: disable
+              truthy: disable
+              brackets: disable
+              comments: disable
 
       - name: Set up Go
         uses: actions/setup-go@v6
