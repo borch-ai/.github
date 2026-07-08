@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
@@ -49,12 +49,12 @@ jobs:
           fi
 
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       # Set up Go with automatic dependency caching
       - name: Set up Go
         if: ${{ inputs.language == 'go' }}
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -62,7 +62,7 @@ jobs:
       # Initialize CodeQL tools for PRs (standard query suite for speed)
       - name: Initialize CodeQL (PR)
         if: github.event_name == 'pull_request'
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
         with:
           languages: ${{ inputs.language }}
           build-mode: ${{ inputs.build-mode }}
@@ -70,7 +70,7 @@ jobs:
       # Initialize CodeQL tools for pushes and schedules (complete/extended query suite)
       - name: Initialize CodeQL (Push/Schedule)
         if: github.event_name != 'pull_request'
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
         with:
           languages: ${{ inputs.language }}
           queries: security-extended
@@ -79,7 +79,7 @@ jobs:
       # Compile code automatically using Autobuild (if build-mode is autobuild)
       - name: Autobuild
         if: ${{ inputs.build-mode == 'autobuild' }}
-        uses: github/codeql-action/autobuild@v4
+        uses: github/codeql-action/autobuild@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
 
       # Compile code using custom build command (if build-mode is manual)
       - name: Custom Build
@@ -88,6 +88,6 @@ jobs:
 
       # Perform the analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
         with:
           category: "/language:${{ inputs.language }}"

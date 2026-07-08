@@ -1,6 +1,6 @@
 # Contributing to borch-ai
 
-Thank you for contributing to the **borch-ai** publishing ecosystem. This guide applies to all repositories in the organization: **Kiln**, **Pithos**, **Powerword**, **Aeolian**, **Lighthouse**, and **Lamplighter**.
+Thank you for contributing to the **borch-ai** publishing ecosystem. This guide applies to all repositories in the organization: **Kiln**, **Pithos**, **Powerword**, **Aeolian**, **Lighthouse**, **Lamplighter**, and **Daedalus**.
 
 ---
 
@@ -44,6 +44,7 @@ The hook runs `make all` then `powerword review --local`, which validates your d
 - **Branch naming**: `task/<number>-<short-description>` (e.g. `task/3.9-cli-beautification`)
 - **No direct pushes to `main`**: All changes go through a Pull Request. Branch protection is enforced.
 - **Squash merge only**: All PRs are squash-merged to keep git history clean and bisectable.
+- **Required status checks**: Org-wide branch protection requires both `Code Linting` and `Security & Tests` checks to pass. Any repository in the organization must define jobs with these exact names to allow merging.
 
 ---
 
@@ -68,6 +69,7 @@ The borch-ai stack has strict ownership boundaries:
 | Media / music pipeline | **Aeolian** |
 | Telemetry sink & analytics | **Lighthouse** |
 | Ecosystem Architecture & Deduplication | **Daedalus** |
+| Shared CI/CD & org configuration | **`.github`** |
 
 **Do not embed API client code for LLMs or external services directly in Kiln or Aeolian.** Build a Powerword MCP plugin and consume it via MCP stdio.
 
