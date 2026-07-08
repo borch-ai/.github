@@ -11,11 +11,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 ## [Unreleased]
 
 ### Added
+
 - **ci-self-test.yml**: New workflow that validates all workflow YAML files in this repo using `yamllint` and `actionlint` on every PR touching `.github/workflows/`.
 - **ISSUE_TEMPLATE/bug.yml**: Structured bug report form with required fields for affected repo, description, and reproduction steps.
 - **CODEOWNERS**: Requires review from `@borch-ai/platform` for changes to any workflow file.
 
 ### Changed
+
 - **All workflows**: Pinned all GitHub Action references to full commit SHAs (supply chain hardening). Version tags are preserved as inline comments.
 - **codeql-with-sibling.yml**: Added missing `step-security/harden-runner` step.
 - **pr-title.yml**: Upgraded `amannn/action-semantic-pull-request` from `v5` → `v6.1.1`. Switched Harden Runner to `egress-policy: block` (no external network calls in this job).
