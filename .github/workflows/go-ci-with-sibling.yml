@@ -52,6 +52,9 @@ jobs:
           path: ${{ inputs.repo-path }}
           fetch-depth: 0
 
+      - name: Suppress git init hint
+        run: git config --global init.defaultBranch main
+
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
