@@ -50,6 +50,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           path: ${{ inputs.repo-path }}
+          fetch-depth: 0
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
