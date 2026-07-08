@@ -47,7 +47,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: ${{ inputs.repo-path }}
           fetch-depth: 0
@@ -62,7 +62,7 @@ jobs:
 
       - name: Run Gitleaks
         if: github.actor != 'dependabot[bot]'
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
@@ -86,7 +86,7 @@ jobs:
 
       - name: Run Hadolint
         if: steps.check_dockerfile.outputs.exists == 'true'
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: ${{ inputs.repo-path }}/Dockerfile
 
@@ -104,7 +104,7 @@ jobs:
               comments: disable
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -112,7 +112,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout Sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
@@ -146,12 +146,12 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: ${{ inputs.repo-path }}
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -159,7 +159,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout Sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}

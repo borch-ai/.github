@@ -43,12 +43,12 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: ${{ inputs.repo-path }}
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -56,7 +56,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
