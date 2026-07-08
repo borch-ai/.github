@@ -8,7 +8,7 @@ This document outlines the strategic phases for developing centralized GitHub Ac
 
 The `.github` repository contains the reusable workflow templates and configuration templates that govern all repositories in the `borch-ai` organization. By centralizing these Actions, we enable automated quality assurance, linting, code scanning (`daedalus`), and deployment pipeline hooks across the entire codebase.
 
-```
+```text
                     ┌─────────────────────────┐
                     │     borch-ai/.github     │
                     │  (Centralized Workflows)│
