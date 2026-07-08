@@ -67,6 +67,7 @@ The borch-ai stack has strict ownership boundaries:
 | Business orchestration & state | **Kiln** |
 | Media / music pipeline | **Aeolian** |
 | Telemetry sink & analytics | **Lighthouse** |
+| Ecosystem Architecture & Deduplication | **Daedalus** |
 
 **Do not embed API client code for LLMs or external services directly in Kiln or Aeolian.** Build a Powerword MCP plugin and consume it via MCP stdio.
 

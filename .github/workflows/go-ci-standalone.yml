@@ -25,8 +25,39 @@ jobs:
     env:
       CI_APP_ID: ${{ secrets.CI_APP_ID }}
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Checkout Code
         uses: actions/checkout@v6
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          ignore_paths: node_modules
+
+      - name: Run Hadolint
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: Dockerfile
+          ignore-no-dockerfile: true
+
+      - name: Run Yamllint
+        uses: ibiqlik/action-yamllint@v3
+        with:
+          file_or_dir: .
+          config_data: |
+            extends: default
+            rules:
+              line-length: disable
+              document-start: disable
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -62,6 +93,11 @@ jobs:
     name: Security & Tests
     runs-on: ubuntu-latest
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Checkout Code
         uses: actions/checkout@v6
 
@@ -82,3 +118,4 @@ jobs:
 
       - name: Compile Binary
         run: make build
+

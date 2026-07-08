@@ -28,6 +28,11 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@v2
+        with:
+          egress-policy: audit
+
       - name: Validate language input
         run: |
           ALLOWED="c-cpp csharp go java-kotlin javascript-typescript python ruby swift"

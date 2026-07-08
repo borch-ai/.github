@@ -47,6 +47,12 @@ The unified stack-wide telemetry sink and privacy-first web analytics platform.
 - **Cookie-Free Web Analytics**: Implements a GDPR-compliant aggregate API to track conversion rates on validation landing pages.
 - **Consolidated Telemetry**: Ingests token metrics, financial API expenses, exception errors, and feature engagement from all components.
 
+### 🦉 [Daedalus](https://github.com/borch-ai/daedalus)
+The autonomous Engineering & Architecture Intelligence layer for ecosystem self-healing.
+- **Ecosystem Indexing**: Cross-references VISION/ROADMAP files to find misaligned dependencies.
+- **Proactive Refactoring**: Drafts Architecture Decision Records (ADRs) and PRs for dead code elimination and shared library extraction.
+- **The Ouroboros Protocol**: Meta-learning loop to improve its own analysis tools and prompts over time.
+
 ---
 
 ## 📐 Core Architecture
@@ -93,6 +99,17 @@ graph TD
     subgraph Lamplighter ["🏮 Lamplighter — Mobile Monitor"]
         LL[Lamplighter]
     end
+
+    subgraph Daedalus ["🦉 Daedalus — Architecture Agent"]
+        D[Daedalus Engine]
+    end
+
+    %% Daedalus analyzes the ecosystem
+    D -.->|analyze & refactor| K
+    D -.->|analyze & refactor| P
+    D -.->|analyze & refactor| A
+    D -.->|analyze & refactor| PW
+    D -.->|analyze & refactor| LH
 
     %% Kiln orchestrates Aeolian (book pipeline already wired inside Kiln subgraph)
     K -->|forge media| A
