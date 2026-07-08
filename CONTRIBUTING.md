@@ -44,6 +44,7 @@ The hook runs `make all` then `powerword review --local`, which validates your d
 - **Branch naming**: `task/<number>-<short-description>` (e.g. `task/3.9-cli-beautification`)
 - **No direct pushes to `main`**: All changes go through a Pull Request. Branch protection is enforced.
 - **Squash merge only**: All PRs are squash-merged to keep git history clean and bisectable.
+- **Required status checks**: Org-wide branch protection requires both `Code Linting` and `Security & Tests` checks to pass. Any repository in the organization must define jobs with these exact names to allow merging.
 
 ---
 

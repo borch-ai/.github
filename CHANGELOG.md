@@ -23,7 +23,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **scorecard.yml**: Upgraded `ossf/scorecard-action` from `v2.4.0` → `v2.4.3`.
 - **ISSUE_TEMPLATE/adr.md**: Added `daedalus` to the list of affected repositories.
 - **CONTRIBUTING.md**: Added `daedalus` to the cross-repository boundary table.
-- **rulesets/core_branch_protection.json**: Added `required_status_checks` rule.
+- **ci-self-test.yml**: Updated actionlint downloader script reference to use tag `v1.7.7`'s commit SHA and pinned the binary download to `1.7.7` for supply chain security.
+- **rulesets/core_branch_protection.json**: Added `required_status_checks` rule requiring "Code Linting" and "Security & Tests" checks to pass.
+- **CONTRIBUTING.md**: Added `daedalus` to the boundary table, and documented the required status checks constraint.
 
 ---
 
