@@ -47,7 +47,7 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repo
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: ${{ inputs.repo-path }}
           fetch-depth: 0
@@ -62,7 +62,7 @@ jobs:
 
       - name: Run Gitleaks
         if: github.actor != 'dependabot[bot]'
-        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
@@ -86,12 +86,12 @@ jobs:
 
       - name: Run Hadolint
         if: steps.check_dockerfile.outputs.exists == 'true'
-        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        uses: hadolint/hadolint-action@2332a7b74a6de0dda2e2221d575162eba76ba5e5 # v3.3.0
         with:
           dockerfile: ${{ inputs.repo-path }}/Dockerfile
 
       - name: Run Yamllint
-        uses: ibiqlik/action-yamllint@ae1abb2821b567e96742aa776f7b62c9b6a26bc8 # v3
+        uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3
         with:
           file_or_dir: ${{ inputs.repo-path }}
           config_data: |
@@ -104,7 +104,7 @@ jobs:
               comments: disable
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -112,7 +112,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout Sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
@@ -146,12 +146,12 @@ jobs:
           egress-policy: audit
 
       - name: Checkout Repo
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           path: ${{ inputs.repo-path }}
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -159,7 +159,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout Sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
