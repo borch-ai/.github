@@ -7,6 +7,12 @@ name: Validate PR Description
 
 on:
   workflow_call:
+    inputs:
+      template_path:
+        description: 'Path to the PR template file to validate against'
+        required: false
+        type: string
+        default: '.github/pull_request_template.md'
 
 permissions:
   pull-requests: read
@@ -21,27 +27,37 @@ jobs:
         with:
           egress-policy: audit
 
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
       - name: Check PR Body for Required Headings
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
+          TEMPLATE_PATH: ${{ inputs.template_path }}
         run: |
           if [[ -z "$PR_BODY" ]]; then
             echo "::error::PR body is empty. Please follow the PR template."
             exit 1
           fi
 
-          # Define the required headings from pull_request_template.md
-          REQUIRED_HEADINGS=(
-            "## Overview"
-            "## Changes"
-            "## Verification"
-            "## Related Issues"
-          )
+          if [[ ! -f "$TEMPLATE_PATH" ]]; then
+            echo "::warning::PR template not found at $TEMPLATE_PATH. Skipping format validation."
+            exit 0
+          fi
+
+          # Dynamically extract all markdown headings (lines starting with '## ', '### ', etc. or just '## ')
+          # Let's specifically target '## ' or any level of headings if you prefer, 
+          # but sticking to '## ' matches standard templates best.
+          mapfile -t REQUIRED_HEADINGS < <(grep '^#\{1,\} ' "$TEMPLATE_PATH")
+
+          if [[ ${#REQUIRED_HEADINGS[@]} -eq 0 ]]; then
+            echo "::warning::No markdown headings found in $TEMPLATE_PATH. Skipping validation."
+            exit 0
+          fi
 
           MISSING_HEADINGS=0
           for heading in "${REQUIRED_HEADINGS[@]}"; do
-            # Use grep with -E to allow for trailing spaces or slight variations if needed, 
-            # but strict match to start of line is safer.
+            # strict match to start of line
             if ! echo "$PR_BODY" | grep -q "^${heading}"; then
               echo "::error::Missing required heading in PR description: ${heading}"
               MISSING_HEADINGS=1
@@ -49,7 +65,7 @@ jobs:
           done
 
           if [ $MISSING_HEADINGS -ne 0 ]; then
-            echo "::error::PR description does not match the required template format. Ensure it contains: ## Overview, ## Changes, ## Verification, ## Related Issues."
+            echo "::error::PR description does not match the required template format. Ensure it contains the headings from $TEMPLATE_PATH."
             exit 1
           fi
           
