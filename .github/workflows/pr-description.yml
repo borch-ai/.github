@@ -15,6 +15,7 @@ on:
         default: '.github/pull_request_template.md'
 
 permissions:
+  contents: read
   pull-requests: read
 
 jobs:
