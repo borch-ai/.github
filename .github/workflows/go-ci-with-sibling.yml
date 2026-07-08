@@ -66,11 +66,20 @@ jobs:
           scandir: ${{ inputs.repo-path }}
           ignore_paths: node_modules
 
+      - name: Check for Dockerfile
+        id: check_dockerfile
+        run: |
+          if [ -f "${{ inputs.repo-path }}/Dockerfile" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Hadolint
+        if: steps.check_dockerfile.outputs.exists == 'true'
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: ${{ inputs.repo-path }}/Dockerfile
-          ignore-no-dockerfile: true
 
       - name: Run Yamllint
         uses: ibiqlik/action-yamllint@v3
