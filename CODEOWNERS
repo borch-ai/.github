@@ -1,0 +1,19 @@
+# CODEOWNERS for borch-ai/.github
+#
+# Any change to workflow files or shared repository configuration must be
+# reviewed by the platform team to prevent unintended changes from propagating
+# to all borch-ai repositories.
+#
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Reusable workflows — changes affect every consuming repo
+.github/workflows/         @borch-ai/platform
+
+# Rulesets — changes affect all org branch protection
+rulesets/                  @borch-ai/platform
+
+# Community health files — require platform team sign-off
+CODE_OF_CONDUCT.md         @borch-ai/platform
+CONTRIBUTING.md            @borch-ai/platform
+SECURITY.md                @borch-ai/platform
+CHANGELOG.md               @borch-ai/platform

@@ -20,6 +20,7 @@ assignees: ''
 - [ ] `powerword`
 - [ ] `lighthouse`
 - [ ] `lamplighter`
+- [ ] `daedalus`
 
 ## Consequences
 <!-- What becomes easier or more difficult? What are the risks? -->

@@ -26,24 +26,24 @@ jobs:
       CI_APP_ID: ${{ secrets.CI_APP_ID }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           fetch-depth: 0
 
       - name: Run Gitleaks
         if: github.actor != 'dependabot[bot]'
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
 
       - name: Run ShellCheck
-        uses: ludeeus/action-shellcheck@2.0.0
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
         with:
           ignore_paths: node_modules
 
@@ -58,12 +58,12 @@ jobs:
 
       - name: Run Hadolint
         if: steps.check_dockerfile.outputs.exists == 'true'
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
         with:
           dockerfile: Dockerfile
 
       - name: Run Yamllint
-        uses: ibiqlik/action-yamllint@v3
+        uses: ibiqlik/action-yamllint@ae1abb2821b567e96742aa776f7b62c9b6a26bc8 # v3
         with:
           file_or_dir: .
           config_data: |
@@ -76,7 +76,7 @@ jobs:
               comments: disable
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
           cache: true
@@ -86,7 +86,7 @@ jobs:
         # Repos that build the linter from source (e.g. powerword itself) do
         # not need this step — make lint runs `go run ./cmd/powerword lint-go`.
         if: env.CI_APP_ID != ''
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -110,15 +110,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
           egress-policy: audit
 
       - name: Checkout Code
-        uses: actions/checkout@v6
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: go.mod
           cache: true
@@ -134,4 +134,3 @@ jobs:
 
       - name: Compile Binary
         run: make build
-

@@ -23,12 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@v2
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
         with:
-          egress-policy: audit
+          egress-policy: block
 
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check PR Body for Required Headings
         env:
@@ -46,7 +46,7 @@ jobs:
           fi
 
           # Dynamically extract all markdown headings (lines starting with '## ', '### ', etc. or just '## ')
-          # Let's specifically target '## ' or any level of headings if you prefer, 
+          # Let's specifically target '## ' or any level of headings if you prefer,
           # but sticking to '## ' matches standard templates best.
           mapfile -t REQUIRED_HEADINGS < <(grep '^#\{1,\} ' "$TEMPLATE_PATH")
 
@@ -68,5 +68,5 @@ jobs:
             echo "::error::PR description does not match the required template format. Ensure it contains the headings from $TEMPLATE_PATH."
             exit 1
           fi
-          
+
           echo "PR description format is valid."

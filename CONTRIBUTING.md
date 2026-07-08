@@ -1,6 +1,6 @@
 # Contributing to borch-ai
 
-Thank you for contributing to the **borch-ai** publishing ecosystem. This guide applies to all repositories in the organization: **Kiln**, **Pithos**, **Powerword**, **Aeolian**, **Lighthouse**, and **Lamplighter**.
+Thank you for contributing to the **borch-ai** publishing ecosystem. This guide applies to all repositories in the organization: **Kiln**, **Pithos**, **Powerword**, **Aeolian**, **Lighthouse**, **Lamplighter**, and **Daedalus**.
 
 ---
 
@@ -68,6 +68,7 @@ The borch-ai stack has strict ownership boundaries:
 | Media / music pipeline | **Aeolian** |
 | Telemetry sink & analytics | **Lighthouse** |
 | Ecosystem Architecture & Deduplication | **Daedalus** |
+| Shared CI/CD & org configuration | **`.github`** |
 
 **Do not embed API client code for LLMs or external services directly in Kiln or Aeolian.** Build a Powerword MCP plugin and consume it via MCP stdio.
 

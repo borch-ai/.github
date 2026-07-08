@@ -42,13 +42,18 @@ jobs:
     timeout-minutes: 15
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           path: ${{ inputs.repo-path }}
 
       - name: Generate GitHub App Token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@67e27a7eb7db372a1c61a7f9bdab8699e9ee57f7 # v1.11.3
         id: app-token
         with:
           app-id: ${{ secrets.CI_APP_ID }}
@@ -56,14 +61,14 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Checkout sibling (${{ inputs.sibling-repo }})
-        uses: actions/checkout@v6
+        uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
         with:
           go-version-file: ${{ inputs.repo-path }}/go.mod
           cache: true
@@ -72,7 +77,7 @@ jobs:
             ${{ inputs.sibling-path }}/go.sum
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
+        uses: github/codeql-action/init@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
         with:
           languages: go
           build-mode: manual
@@ -82,6 +87,6 @@ jobs:
         run: make build
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
+        uses: github/codeql-action/analyze@1ad29ea4a422cce9a242a9fae469541dcd08addc # v4
         with:
           category: "/language:go"
