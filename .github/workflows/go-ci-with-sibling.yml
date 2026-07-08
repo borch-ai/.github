@@ -52,8 +52,13 @@ jobs:
           path: ${{ inputs.repo-path }}
           fetch-depth: 0
 
-      - name: Suppress git init hint
-        run: git config --global init.defaultBranch main
+      - name: Initialize Workspace Git Repo for Gitleaks
+        # gitleaks-action runs in Docker and will attempt to git init if no .git exists,
+        # which causes a stderr warning and crashes it. We initialize it here to prevent that.
+        run: |
+          git config --global init.defaultBranch main
+          git init
+          git add .
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
