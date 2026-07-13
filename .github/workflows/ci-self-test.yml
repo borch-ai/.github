@@ -55,7 +55,7 @@ jobs:
 
   pr-description:
     name: Validate PR Description
-    if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login != 'dependabot[bot]'
     uses: ./.github/workflows/pr-description.yml
 
   markdown-lint:
