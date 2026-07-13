@@ -8,3 +8,6 @@ updates:
       github-actions:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "gitleaks/gitleaks-action"
+        versions: [">= 3.0.0"]
