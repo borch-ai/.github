@@ -98,3 +98,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+
+  budget-auditor:
+    name: Audit Token Budget
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/powerword-budget-auditor.yml
+    secrets: inherit
+    with:
+      pr-number: ${{ github.event.pull_request.number }}
+

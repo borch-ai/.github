@@ -1,0 +1,118 @@
+name: Powerword Token & Budget Auditor
+
+on:
+  workflow_call:
+    inputs:
+      telemetry-file:
+        description: "Path to the telemetry log file relative to workspace root"
+        type: string
+        default: ".agents/telemetry.json"
+      cost-limit:
+        description: "Financial budget limit in USD"
+        type: string
+        default: "2.00"
+      strict-mode:
+        description: "Fail the build if the budget is exceeded"
+        type: boolean
+        default: false
+      sibling-repo:
+        description: "Full name of the sibling repo to check out (e.g. borch-ai/powerword)"
+        type: string
+        default: "borch-ai/powerword"
+      sibling-path:
+        description: "Local path to check out the sibling repo into"
+        type: string
+        default: "powerword"
+      repo-path:
+        description: "Local path to check out the calling repository into"
+        type: string
+        default: "repo"
+      pr-number:
+        description: "Pull request number to comment on"
+        type: number
+        required: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  audit-budget:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@bf7454d06d71f1098171f2acdf0cd4708d7b5920 # v2.20.0
+        with:
+          egress-policy: audit
+
+      - name: Checkout Calling Repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: ${{ inputs.repo-path }}
+
+      - name: Check telemetry file existence
+        id: check_telemetry
+        run: |
+          if [ -f "${{ inputs.repo-path }}/${{ inputs.telemetry-file }}" ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "No telemetry file found at ${{ inputs.repo-path }}/${{ inputs.telemetry-file }}. Skipping budget audit."
+          fi
+
+      - name: Generate GitHub App Token
+        if: steps.check_telemetry.outputs.exists == 'true'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout Sibling (${{ inputs.sibling-repo }})
+        if: steps.check_telemetry.outputs.exists == 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ inputs.sibling-repo }}
+          path: ${{ inputs.sibling-path }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Set up Go
+        if: steps.check_telemetry.outputs.exists == 'true'
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: ${{ inputs.sibling-path }}/go.mod
+          cache: true
+
+      - name: Build powerword
+        # Compile the CLI tool
+        if: steps.check_telemetry.outputs.exists == 'true'
+        run: |
+          cd ${{ inputs.sibling-path }}
+          go build -o /tmp/powerword ./cmd/powerword
+
+      - name: Run Budget Auditor
+        if: steps.check_telemetry.outputs.exists == 'true'
+        run: |
+          /tmp/powerword audit \
+            --file "${{ inputs.repo-path }}/${{ inputs.telemetry-file }}" \
+            --limit "${{ inputs.cost-limit }}" \
+            --strict="${{ inputs.strict-mode }}" \
+            --format="markdown" > audit_summary.md
+
+      - name: Post or Update PR Comment
+        if: steps.check_telemetry.outputs.exists == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Retrieve existing budget auditor comment ID if it exists
+          COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ inputs.pr-number }}/comments --paginate | jq '.[] | select(.body | contains("<!-- powerword-budget-auditor-marker -->")) | .id' | head -n 1)
+
+          if [ -n "$COMMENT_ID" ]; then
+            echo "Updating existing comment $COMMENT_ID..."
+            gh api -X PATCH repos/${{ github.repository }}/issues/comments/$COMMENT_ID -F body=@audit_summary.md
+          else
+            echo "Creating new comment..."
+            gh pr comment ${{ inputs.pr-number }} --body-file audit_summary.md
+          fi
