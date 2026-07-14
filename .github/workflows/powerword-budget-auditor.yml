@@ -109,12 +109,12 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Retrieve existing budget auditor comment ID if it exists
-          COMMENT_ID=$(gh api repos/${{ github.repository }}/issues/${{ inputs.pr-number }}/comments --paginate | jq '.[] | select(.body | contains("<!-- powerword-budget-auditor-marker -->")) | .id' | head -n 1)
+          COMMENT_ID=$(gh api "repos/${{ github.repository }}/issues/${{ inputs.pr-number }}/comments" --paginate | jq '.[] | select(.body | contains("<!-- powerword-budget-auditor-marker -->")) | .id' | head -n 1)
 
           if [ -n "$COMMENT_ID" ]; then
             echo "Updating existing comment $COMMENT_ID..."
-            gh api -X PATCH repos/${{ github.repository }}/issues/comments/$COMMENT_ID -F body=@audit_summary.md
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$COMMENT_ID" -F body=@audit_summary.md
           else
             echo "Creating new comment..."
-            gh pr comment ${{ inputs.pr-number }} --body-file audit_summary.md
+            gh pr comment "${{ inputs.pr-number }}" --body-file audit_summary.md
           fi
