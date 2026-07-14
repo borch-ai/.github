@@ -104,6 +104,9 @@ jobs:
     if: github.event_name == 'pull_request'
     uses: ./.github/workflows/powerword-budget-auditor.yml
     secrets: inherit
+    permissions:
+      pull-requests: write
+      issues: write
+      contents: read
     with:
       pr-number: ${{ github.event.pull_request.number }}
-
