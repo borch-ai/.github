@@ -52,7 +52,6 @@ The autonomous Engineering & Architecture Intelligence layer for ecosystem self-
 - **Ecosystem Indexing**: Cross-references VISION/ROADMAP files to find misaligned dependencies.
 - **Proactive Refactoring**: Drafts Architecture Decision Records (ADRs) and PRs for dead code elimination and shared library extraction.
 - **The Ouroboros Protocol**: Meta-learning loop to improve its own analysis tools and prompts over time.
-
 ---
 
 ## 📐 Core Architecture
@@ -110,7 +109,6 @@ graph TD
     D -.->|analyze & refactor| A
     D -.->|analyze & refactor| PW
     D -.->|analyze & refactor| LH
-
     %% Kiln orchestrates Aeolian (book pipeline already wired inside Kiln subgraph)
     K -->|forge media| A
 
