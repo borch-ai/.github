@@ -1,4 +1,4 @@
-![borch-ai ecosystem](borch_ai_ecosystem_banner.png)
+<video src="borch_ai_ecosystem_banner.mp4" autoplay loop muted playsinline width="100%"></video>
 
 # borch-ai
 
