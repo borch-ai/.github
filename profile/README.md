@@ -1,4 +1,4 @@
-![borch-ai](borch_ai_banner.png)
+![borch-ai ecosystem](borch_ai_ecosystem_banner.png)
 
 # borch-ai
 
