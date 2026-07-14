@@ -53,7 +53,10 @@ jobs:
           fetch-depth: 0
 
       - name: Move Git Directory to Root for Gitleaks
-        run: mv ${{ inputs.repo-path }}/.git .git
+        run: |
+          if [ "${{ inputs.repo-path }}" != "." ]; then
+            mv ${{ inputs.repo-path }}/.git .git
+          fi
 
       - name: Run Gitleaks
         if: github.actor != 'dependabot[bot]'
@@ -66,7 +69,10 @@ jobs:
 
       - name: Move Git Directory back to Repo Path
         if: always()
-        run: mv .git ${{ inputs.repo-path }}/.git
+        run: |
+          if [ "${{ inputs.repo-path }}" != "." ]; then
+            mv .git ${{ inputs.repo-path }}/.git
+          fi
 
       - name: Run ShellCheck
         uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
