@@ -1,0 +1,122 @@
+name: Release Go Binary
+
+on:
+  workflow_call:
+    inputs:
+      binary-name:
+        description: "Name of the binary to build"
+        type: string
+        required: true
+      sibling-repo:
+        description: "Full name of the sibling repo to check out (e.g. borch-ai/powerword)"
+        type: string
+        required: false
+      sibling-path:
+        description: "Local path to check out the sibling repo into (e.g. powerword)"
+        type: string
+        required: false
+      repo-path:
+        description: "Local path to check out this repo into (default: .)"
+        type: string
+        required: false
+        default: "."
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          path: ${{ inputs.repo-path }}
+          fetch-depth: 0
+
+      - name: Generate GitHub App Token
+        if: inputs.sibling-repo != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Checkout Sibling (${{ inputs.sibling-repo }})
+        if: inputs.sibling-repo != ''
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: ${{ inputs.sibling-repo }}
+          path: ${{ inputs.sibling-path }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Create Sibling Symlink
+        if: inputs.sibling-repo != '' && inputs.repo-path == '.'
+        run: ln -s "$GITHUB_WORKSPACE/${{ inputs.sibling-path }}" "$GITHUB_WORKSPACE/../${{ inputs.sibling-path }}"
+
+      - name: Set up Go
+        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        with:
+          go-version-file: ${{ inputs.repo-path }}/go.mod
+          cache: true
+
+      - name: Install Sibling CLI
+        if: inputs.sibling-repo != ''
+        run: |
+          cd ${{ inputs.sibling-path }}
+          go install ./cmd/...
+
+      - name: Run Linter
+        working-directory: ${{ inputs.repo-path }}
+        run: make lint
+
+      - name: Check Dependency Tidy Hygiene
+        working-directory: ${{ inputs.repo-path }}
+        run: |
+          make tidy
+          git diff --exit-code go.mod go.sum
+
+      - name: Run Vulnerability Scan
+        working-directory: ${{ inputs.repo-path }}
+        run: make vuln
+
+      - name: Run Tests & Check Coverage
+        working-directory: ${{ inputs.repo-path }}
+        run: make check-coverage
+
+      - name: Run Semantic Release
+        uses: go-semantic-release/action@453e003c94ddb9c64e7ea4153794ef69e477259e # v1.24.1
+        id: semrel
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          working-directory: ${{ inputs.repo-path }}
+
+      - name: Build Binaries
+        if: steps.semrel.outputs.version != ''
+        working-directory: ${{ inputs.repo-path }}
+        env:
+          VERSION: ${{ steps.semrel.outputs.version }}
+          BINARY_NAME: ${{ inputs.binary-name }}
+        run: |
+          mkdir -p dist
+          VERSION_NUM="${VERSION#v}"
+          VERSION_TAG="v${VERSION_NUM}"
+          echo "Building version ${VERSION_TAG}..."
+          GOOS=darwin GOARCH=amd64 go build -ldflags "-X github.com/${{ github.repository }}/internal/config.Version=${VERSION_TAG}" -o dist/${BINARY_NAME}-darwin-amd64 ./cmd/${BINARY_NAME}
+          GOOS=darwin GOARCH=arm64 go build -ldflags "-X github.com/${{ github.repository }}/internal/config.Version=${VERSION_TAG}" -o dist/${BINARY_NAME}-darwin-arm64 ./cmd/${BINARY_NAME}
+          GOOS=linux GOARCH=amd64 go build -ldflags "-X github.com/${{ github.repository }}/internal/config.Version=${VERSION_TAG}" -o dist/${BINARY_NAME}-linux-amd64 ./cmd/${BINARY_NAME}
+          GOOS=linux GOARCH=arm64 go build -ldflags "-X github.com/${{ github.repository }}/internal/config.Version=${VERSION_TAG}" -o dist/${BINARY_NAME}-linux-arm64 ./cmd/${BINARY_NAME}
+          GOOS=windows GOARCH=amd64 go build -ldflags "-X github.com/${{ github.repository }}/internal/config.Version=${VERSION_TAG}" -o dist/${BINARY_NAME}-windows-amd64.exe ./cmd/${BINARY_NAME}
+
+      - name: Upload Binaries to GitHub Release
+        if: steps.semrel.outputs.version != ''
+        working-directory: ${{ inputs.repo-path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.semrel.outputs.version }}
+        run: |
+          VERSION_NUM="${VERSION#v}"
+          VERSION_TAG="v${VERSION_NUM}"
+          gh release upload "$VERSION_TAG" dist/* --clobber
