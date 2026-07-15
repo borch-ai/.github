@@ -58,8 +58,9 @@ jobs:
 
           MISSING_HEADINGS=0
           for heading in "${REQUIRED_HEADINGS[@]}"; do
-            # strict match to start of line
-            if ! echo "$PR_BODY" | grep -q "^${heading}"; then
+            # strict match to start of line, removing any hidden carriage returns
+            clean_heading=$(echo "$heading" | tr -d '\r')
+            if ! echo "$PR_BODY" | tr -d '\r' | grep -q "^${clean_heading}"; then
               echo "::error::Missing required heading in PR description: ${heading}"
               MISSING_HEADINGS=1
             fi
