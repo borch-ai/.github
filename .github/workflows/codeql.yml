@@ -54,7 +54,7 @@ jobs:
       # Set up Go with automatic dependency caching
       - name: Set up Go
         if: ${{ inputs.language == 'go' }}
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: 'go.mod'
           cache: true
@@ -62,7 +62,7 @@ jobs:
       # Initialize CodeQL tools for PRs (standard query suite for speed)
       - name: Initialize CodeQL (PR)
         if: github.event_name == 'pull_request'
-        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
+        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4
         with:
           languages: ${{ inputs.language }}
           build-mode: ${{ inputs.build-mode }}
@@ -70,7 +70,7 @@ jobs:
       # Initialize CodeQL tools for pushes and schedules (complete/extended query suite)
       - name: Initialize CodeQL (Push/Schedule)
         if: github.event_name != 'pull_request'
-        uses: github/codeql-action/init@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
+        uses: github/codeql-action/init@7188fc363630916deb702c7fdcf4e481b751f97a # v4
         with:
           languages: ${{ inputs.language }}
           queries: security-extended
@@ -79,7 +79,7 @@ jobs:
       # Compile code automatically using Autobuild (if build-mode is autobuild)
       - name: Autobuild
         if: ${{ inputs.build-mode == 'autobuild' }}
-        uses: github/codeql-action/autobuild@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
+        uses: github/codeql-action/autobuild@7188fc363630916deb702c7fdcf4e481b751f97a # v4
 
       # Compile code using custom build command (if build-mode is manual)
       - name: Custom Build
@@ -88,6 +88,6 @@ jobs:
 
       # Perform the analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@99df26d4f13ea111d4ec1a7dddef6063f76b97e9 # v4
+        uses: github/codeql-action/analyze@7188fc363630916deb702c7fdcf4e481b751f97a # v4
         with:
           category: "/language:${{ inputs.language }}"
