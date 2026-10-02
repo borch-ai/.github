@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: ${{ inputs.repo-path }}
           fetch-depth: 0
@@ -47,7 +47,7 @@ jobs:
 
       - name: Checkout Sibling (${{ inputs.sibling-repo }})
         if: inputs.sibling-repo != ''
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ inputs.sibling-repo }}
           path: ${{ inputs.sibling-path }}
@@ -58,7 +58,7 @@ jobs:
         run: ln -s "$GITHUB_WORKSPACE/${{ inputs.sibling-path }}" "$GITHUB_WORKSPACE/../${{ inputs.sibling-path }}"
 
       - name: Set up Go
-        uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6.5.0
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: ${{ inputs.repo-path }}/go.mod
           cache: true
@@ -88,7 +88,7 @@ jobs:
         run: make check-coverage
 
       - name: Run Semantic Release
-        uses: go-semantic-release/action@453e003c94ddb9c64e7ea4153794ef69e477259e # v1.24.1
+        uses: go-semantic-release/action@2e9dc4247a6004f8377781bef4cb9dad273a741f # v1.24.1
         id: semrel
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
