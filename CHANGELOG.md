@@ -12,7 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
-- **Build Task Contract (v1)**: Published `docs/build-contract.md` defining standard task names (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`), semantics, and shared variables across the organization (Task 2.1).
+- **Build Task Contract (v1)**: Published `docs/build-contract.md` defining standard task names (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`), semantics, and shared variables for Go and Python repositories under the Phase 2 Taskfile rollout (Task 2.1). Docker/Node/mobile repositories are explicitly out of scope for v1.
 - **release.yml**: New workflow that automates version tagging and creates GitHub Releases on pushes to `main`.
 - **ci-self-test.yml**: New workflow that validates all workflow YAML files in this repo using `yamllint` and `actionlint` on every PR touching `.github/workflows/`.
 - **ISSUE_TEMPLATE/bug.yml**: Structured bug report form with required fields for affected repo, description, and reproduction steps.

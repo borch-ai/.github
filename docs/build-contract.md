@@ -6,7 +6,7 @@ The contract serves as the canonical specification for:
 
 - **Powerword Validation Auto-detection** (`powerword review --local`)
 - **Conformance Auditing** (`powerword doctor`)
-- **Shared Taskfiles** (`Taskfile.go.yml`, `Taskfile.python.yml`)
+- **Shared Taskfiles** (`taskfiles/go.yml`, `taskfiles/python.yml`)
 - **Task-Aware Reusable CI Workflows** in `.github`
 
 ---
@@ -101,4 +101,4 @@ Contract v1 applies to Go-based and Python-based repositories participating in P
 
 ### How does coverage variable forwarding work between Make and Task?
 
-Contract v1 defines `MIN_COVERAGE` as the standard variable name for Taskfiles, whereas legacy Makefiles expect `COVERAGE_THRESHOLD`. During Phase 2, Task 2.4 will update reusable CI workflows to export *both* variables simultaneously. Until Task 2.4 is deployed across all workflows, repos should accept both variables (e.g. `MIN_COVERAGE ?= $(COVERAGE_THRESHOLD)`) to ensure non-default CI thresholds continue to be enforced.
+Contract v1 defines `MIN_COVERAGE` as the standard variable name for Taskfiles, whereas legacy Makefiles expect `COVERAGE_THRESHOLD`. During Phase 2, Task 2.4 will update reusable CI workflows to export *both* variables simultaneously. Until Task 2.4 is deployed across all workflows, repos should accept both variables (e.g. `MIN_COVERAGE ?= $(or $(COVERAGE_THRESHOLD),91)`) to ensure non-default CI thresholds continue to be enforced while preserving the default of 91 when unset.
