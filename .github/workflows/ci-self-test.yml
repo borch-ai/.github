@@ -81,6 +81,7 @@ jobs:
 
   gitleaks:
     name: Scan Secrets
+    if: github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
