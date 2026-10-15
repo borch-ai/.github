@@ -103,3 +103,13 @@ Phase 2 is complete when **all** of the following are true:
 - [ ] Contract v1, shared Go Taskfile, shim/guide, and Task-aware CI are released under a tagged `.github` version.
 - [ ] Kiln has completed the pilot migration (stage 3 or later per the migration guide).
 - [ ] CI self-test validates Make-only, Task, and partially migrated fixtures.
+
+---
+
+## Phase 3: Infrastructure Hardening & Ecosystem Tooling
+
+*Goal: Harden build infrastructure, remove external action dependencies from the core build loop, and provide internal tooling actions.*
+
+- [ ] **Task 3.1 — In-House Task Setup Action & Binary Verification** `[Size: S]`
+  Create a reusable composite action (`.github/actions/setup-task` or `borch-ai/setup-task`) that fetches official, pre-compiled Task binaries directly with cryptographic SHA-256 checksum verification and runner tool caching, replacing external dependencies like `arduino/setup-task`.
+  [Implementation Plan](plans/phase_3/task_3_1_in_house_setup_task.md)
