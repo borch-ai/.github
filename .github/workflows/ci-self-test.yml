@@ -68,8 +68,11 @@ jobs:
           go-version: '1.22'
           cache: false
 
-      - name: Install Task v3.54.0
-        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+      - name: Install Task
+        uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
+        with:
+          version: 3.54.0
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Standard Fixture
         run: |
