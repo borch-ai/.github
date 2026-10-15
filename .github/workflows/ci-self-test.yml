@@ -9,6 +9,8 @@ on:
       - '.github/workflows/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/pull_request_template.md'
+      - 'taskfiles/**'
+      - 'tests/**'
   pull_request:
     branches: [main]
 
@@ -19,7 +21,7 @@ permissions:
 
 jobs:
   lint-workflows:
-    name: Lint Workflow Files
+    name: Lint Workflow and Taskfile YAML
     runs-on: ubuntu-latest
     steps:
       - name: Harden Runner
@@ -30,10 +32,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Run Yamllint on Workflows
+      - name: Run Yamllint
         uses: ibiqlik/action-yamllint@2576378a8e339169678f9939646ee3ee325e845c # v3
         with:
-          file_or_dir: .github/workflows
+          file_or_dir: .
           config_data: |
             extends: default
             rules:
@@ -47,6 +49,50 @@ jobs:
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
         with:
           version: 1.7.7
+
+  test-taskfiles:
+    name: Test Shared Taskfiles
+    runs-on: ubuntu-latest
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.22'
+          cache: false
+
+      - name: Install Task v3.54.0
+        run: go install github.com/go-task/task/v3/cmd/task@v3.54.0
+
+      - name: Verify Standard Fixture
+        run: |
+          cd tests/taskfiles/go-fixture
+          task all
+          test -x bin/sample
+          test -f coverage.out
+          task clean
+          test ! -d bin
+          test ! -f coverage.out
+
+      - name: Verify Override Fixture
+        run: |
+          cd tests/taskfiles/go-override-fixture
+          task all
+          test -x bin/sample
+          test -f bin/custom-build-executed.txt
+          test -f bin/custom-lint-executed.txt
+          grep -q "custom-build-executed" bin/custom-build-executed.txt
+          grep -q "custom-lint-executed" bin/custom-lint-executed.txt
+          task clean
+          test ! -d bin
+          test ! -f coverage.out
 
   pr-title:
     name: Validate PR Title

@@ -1,0 +1,70 @@
+# https://taskfile.dev
+version: '3'
+
+vars:
+  POWERWORD: 'echo [mock-powerword]'
+  MIN_COVERAGE: '50'
+
+includes:
+  org:
+    taskfile: ../../../taskfiles/go.yml
+    vars:
+      POWERWORD: '{{.POWERWORD}}'
+      MIN_COVERAGE: '{{.MIN_COVERAGE}}'
+
+tasks:
+  all:
+    desc: Run standard quality gate
+    cmds:
+      - task: org:all
+
+  # Override build: produce a marker file proving the root override executed
+  build:
+    desc: Custom build step overriding shared build
+    cmds:
+      - mkdir -p bin
+      - echo "custom-build-executed" > bin/custom-build-executed.txt
+      - task: org:build
+
+  # Override lint: produce a marker file proving root-qualified :lint executed
+  lint:
+    desc: Custom lint step overriding shared lint
+    cmds:
+      - mkdir -p bin
+      - echo "custom-lint-executed" > bin/custom-lint-executed.txt
+
+  test:
+    desc: Run tests
+    cmds:
+      - task: org:test
+
+  fmt:
+    desc: Format code
+    cmds:
+      - task: org:fmt
+
+  tidy:
+    desc: Tidy dependencies
+    cmds:
+      - task: org:tidy
+
+  vuln:
+    desc: Vulnerability scan
+    cmds:
+      - task: org:vuln
+
+  check-coverage:
+    desc: Check test coverage
+    cmds:
+      - task: org:check-coverage
+
+  clean:
+    desc: Clean build outputs
+    cmds:
+      - task: org:clean
+      - rm -f bin/custom-build-executed.txt bin/custom-lint-executed.txt
+
+  install-hooks:
+    desc: Install hooks
+    cmds:
+      - task: org:install-hooks

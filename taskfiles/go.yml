@@ -1,0 +1,117 @@
+# https://taskfile.dev
+# Borch-AI Shared Go Taskfile (Contract v1)
+# Requires Task v3.54.0+
+version: '3'
+
+vars:
+  VERSION: '{{.VERSION | default "dev"}}'
+  LDFLAGS: '{{.LDFLAGS | default (printf "-s -w -X main.version=%s" .VERSION)}}'
+  TEST_PKGS: '{{.TEST_PKGS | default "./..."}}'
+  COVERPKG: '{{.COVERPKG | default "./..."}}'
+  COVERAGE_PROFILE: '{{.COVERAGE_PROFILE | default "coverage.out"}}'
+  BIN_DIR: '{{.BIN_DIR | default "bin"}}'
+  BIN_LIST:
+    sh: if [ -n "{{.BINARIES}}" ]; then echo "{{.BINARIES}}"; elif [ -d cmd ]; then find cmd -mindepth 1 -maxdepth 1 -type d -exec basename {} \; | sort; fi
+
+tasks:
+  all:
+    desc: Full local quality gate (lint, vuln, check-coverage, build)
+    deps:
+      - :lint
+      - :vuln
+      - :check-coverage
+    cmds:
+      - task: :build
+
+  build:
+    desc: Compile application binary artifacts into bin/
+    cmds:
+      - for: {var: BIN_LIST}
+        task: build-binary
+        vars:
+          BIN: '{{.ITEM}}'
+
+  build-binary:
+    internal: true
+    sources:
+      - 'cmd/{{.BIN}}/*.go'
+      - 'cmd/{{.BIN}}/**/*.go'
+      - 'internal/*.go'
+      - 'internal/**/*.go'
+      - 'pkg/*.go'
+      - 'pkg/**/*.go'
+      - 'go.mod'
+      - 'go.sum'
+    generates:
+      - '{{.BIN_DIR}}/{{.BIN}}'
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags="{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.BIN}} ./cmd/{{.BIN}}
+
+  test:
+    desc: Run unit tests with race detection and generate coverage profile
+    cmds:
+      - go test -v -race -covermode=atomic -coverprofile={{.COVERAGE_PROFILE}} -coverpkg={{.COVERPKG}} {{.TEST_PKGS}}
+
+  lint:
+    desc: Execute static analysis and linting via powerword
+    vars:
+      PW: '{{.POWERWORD | default "powerword"}}'
+    preconditions:
+      - sh: 'test "{{.PW}}" != "powerword" || command -v powerword >/dev/null 2>&1'
+        msg: "powerword binary not found. Install it with: go install github.com/borch-ai/powerword/cmd/powerword@latest, or set the POWERWORD variable."
+    cmds:
+      - "{{.PW}} lint-go"
+
+  fmt:
+    desc: Format Go source code in place
+    cmds:
+      - go fmt ./...
+
+  tidy:
+    desc: Normalize Go module dependencies and verify tidy hygiene
+    cmds:
+      - go mod tidy
+
+  vuln:
+    desc: Scan Go dependencies for known vulnerabilities via powerword
+    vars:
+      PW: '{{.POWERWORD | default "powerword"}}'
+    preconditions:
+      - sh: 'test "{{.PW}}" != "powerword" || command -v powerword >/dev/null 2>&1'
+        msg: "powerword binary not found. Install it with: go install github.com/borch-ai/powerword/cmd/powerword@latest, or set the POWERWORD variable."
+    cmds:
+      - "{{.PW}} vuln"
+
+  check-coverage:
+    desc: Run tests and enforce MIN_COVERAGE threshold via powerword
+    vars:
+      PW: '{{.POWERWORD | default "powerword"}}'
+      MIN_COV: '{{.MIN_COVERAGE | default .COVERAGE_THRESHOLD | default "91"}}'
+    deps:
+      - :test
+    preconditions:
+      - sh: 'test "{{.PW}}" != "powerword" || command -v powerword >/dev/null 2>&1'
+        msg: "powerword binary not found. Install it with: go install github.com/borch-ai/powerword/cmd/powerword@latest, or set the POWERWORD variable."
+    cmds:
+      - "{{.PW}} check-coverage {{.MIN_COV}} {{.COVERAGE_PROFILE}}"
+
+  clean:
+    desc: Remove build outputs and coverage profiles
+    cmds:
+      - rm -rf {{.BIN_DIR}} coverage {{.COVERAGE_PROFILE}}
+
+  install-hooks:
+    desc: Install the standard Borch-AI git pre-push hook into .git/hooks
+    preconditions:
+      - sh: 'git rev-parse --is-inside-work-tree >/dev/null 2>&1'
+        msg: "Not inside a git repository."
+      - sh: 'test -f scripts/git-hooks/pre-push'
+        msg: "Pre-push hook script not found at scripts/git-hooks/pre-push."
+    cmds:
+      - |
+        HOOK_DIR=$(git rev-parse --git-path hooks)
+        mkdir -p "$HOOK_DIR"
+        cp scripts/git-hooks/pre-push "$HOOK_DIR/pre-push"
+        chmod +x "$HOOK_DIR/pre-push"
+        echo "Git pre-push hook installed successfully into $HOOK_DIR/pre-push."

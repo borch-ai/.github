@@ -1,0 +1,20 @@
+# https://taskfile.dev
+# Borch-AI Shared Hooks Taskfile (Contract v1)
+# Requires Task v3.54.0+
+version: '3'
+
+tasks:
+  install-hooks:
+    desc: Install the standard Borch-AI git pre-push hook into .git/hooks
+    preconditions:
+      - sh: 'git rev-parse --is-inside-work-tree >/dev/null 2>&1'
+        msg: "Not inside a git repository."
+      - sh: 'test -f scripts/git-hooks/pre-push'
+        msg: "Pre-push hook script not found at scripts/git-hooks/pre-push."
+    cmds:
+      - |
+        HOOK_DIR=$(git rev-parse --git-path hooks)
+        mkdir -p "$HOOK_DIR"
+        cp scripts/git-hooks/pre-push "$HOOK_DIR/pre-push"
+        chmod +x "$HOOK_DIR/pre-push"
+        echo "Git pre-push hook installed successfully into $HOOK_DIR/pre-push."

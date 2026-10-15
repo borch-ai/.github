@@ -1,6 +1,6 @@
 # Plan: Task 2.2: Shared Go Taskfile & Distribution Mechanism
 
-**Status:** Proposed
+**Status:** Complete
 **Depends On:** Task 2.1 (names only — fixed in that plan, so work can proceed in parallel)
 
 Publish a reusable `taskfiles/go.yml` (plus `taskfiles/hooks.yml`) implementing the
@@ -11,18 +11,14 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 ## User Review Required
 
 > [!IMPORTANT]
-> **Distribution decision (first step of this task).** Two options:
+> **Distribution decision: Remote include.**
 >
-> 1. **Remote include** — `includes: { org: { taskfile: https://raw.githubusercontent.com/borch-ai/.github/<tag>/taskfiles/go.yml } }`.
->    Simplest for consumers, but Remote Taskfiles were long gated behind the
->    `TASK_X_REMOTE_TASKFILES` experiment. Adopt only if it is GA in the pinned Task
->    version, and confirm offline/cache behavior for the pre-push hook.
-> 2. **Vendored copy (recommended fallback)** — consumers commit
->    `.taskfiles/borch-ai/go.yml` with a header recording the source tag and checksum;
->    a `taskfile-sync` reusable workflow (scheduled) opens a PR when a newer tag exists.
->    Works offline and is reviewable in diffs.
+> **Selected Option:** **Remote include** (`includes: { org: { taskfile: https://raw.githubusercontent.com/borch-ai/.github/<tag>/taskfiles/go.yml } }`).
 >
-> Record the decision and rationale in this plan before implementing the Taskfile.
+> **Rationale:**
+> - **GA in Pinned Version:** Remote Taskfiles graduated from the `TASK_X_REMOTE_TASKFILES` experiment to General Availability in Task v3.53.0 and are enabled by default in the pinned Task v3.54.0 release without requiring any environment variable flags.
+> - **Zero Consumer Overhead:** Consumers do not need scheduled sync PR workflows or vendored file trees; repos simply pin the include URL to a tagged release.
+> - **Local Caching:** Task caches remote files locally under `.task/` and validates checksums, providing offline reuse and fast execution during local workflows and pre-push hooks once cached.
 
 ### Override Semantics
 
@@ -41,23 +37,23 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 
 ## Acceptance Criteria
 
-- [ ] `taskfiles/go.yml` implements every required contract task (Task 2.1) using
+- [x] `taskfiles/go.yml` implements every required contract task (Task 2.1) using
   overridable vars: `MIN_COVERAGE`, `POWERWORD`, `VERSION`, `LDFLAGS`, `BINARIES`
   (list of `cmd/*` names), `TEST_PKGS`, `COVERPKG`.
-- [ ] Composite and orchestration tasks in `taskfiles/go.yml` (`all`, `check-coverage`)
+- [x] Composite and orchestration tasks in `taskfiles/go.yml` (`all`, `check-coverage`)
   invoke subtasks via root-qualified references (e.g. `:build`, `:lint`, `:vuln`,
   `:check-coverage`, `:test`) so consumer root overrides take effect during aggregate execution.
-- [ ] `build` loops over `BINARIES` (default: every directory under `cmd/`) and uses
+- [x] `build` loops over `BINARIES` (default: every directory under `cmd/`) and uses
   `sources`/`generates` for incremental builds.
-- [ ] `lint`, `vuln`, `check-coverage` delegate to `{{.POWERWORD}}` with a
+- [x] `lint`, `vuln`, `check-coverage` delegate to `{{.POWERWORD}}` with a
   `preconditions` check that prints an install hint when the default `powerword` binary
   is missing (skipped when `POWERWORD` is overridden).
-- [ ] `taskfiles/hooks.yml` provides `install-hooks` (copies the org pre-push hook).
-- [ ] Every task has a `desc:` so `task --list` is self-documenting.
-- [ ] Minimum Task version declared and documented (latest v3.x at implementation time).
-- [ ] Distribution mechanism implemented (remote include docs **or** `taskfile-sync`
+- [x] `taskfiles/hooks.yml` provides `install-hooks` (copies the org pre-push hook).
+- [x] Every task has a `desc:` so `task --list` is self-documenting.
+- [x] Minimum Task version declared and documented (latest v3.x at implementation time).
+- [x] Distribution mechanism implemented (remote include docs **or** `taskfile-sync`
   reusable workflow).
-- [ ] Fixture tests in CI self-test verify both standard inheritance and that overriding
+- [x] Fixture tests in CI self-test verify both standard inheritance and that overriding
   `build` or `lint` in a consumer root Taskfile executes the override when running `task all`.
 - [ ] Released under a new `.github` tag.
 

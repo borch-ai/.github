@@ -80,7 +80,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
   Define the org-wide standard task names (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`), their semantics, and shared variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`). The interface that Powerword detection, shared Taskfiles, and CI depend on.
   [Implementation Plan](plans/phase_2/task_2_1_build_task_contract.md)
 
-- [ ] **Task 2.2 — Shared Go Taskfile & Distribution Mechanism** `[Size: M]`
+- [x] **Task 2.2 — Shared Go Taskfile & Distribution Mechanism** `[Size: M]`
   Publish `taskfiles/go.yml` and `taskfiles/hooks.yml` implementing the contract with overridable vars and data-driven builds. Decide remote include vs. vendored copy with a `taskfile-sync` workflow.
   [Implementation Plan](plans/phase_2/task_2_2_shared_go_taskfile.md)
 
