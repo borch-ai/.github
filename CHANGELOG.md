@@ -12,6 +12,7 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Added
 
+- **Shared Go Taskfile & Hooks**: Published `taskfiles/go.yml` and `taskfiles/hooks.yml` implementing all 10 Contract v1 tasks with overridable variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`, `LDFLAGS`, `BINARIES`, `TEST_PKGS`, `COVERPKG`), root-qualified task orchestration for composite tasks, incremental multi-binary builds, and preconditions for missing linters. Selected HTTPS remote includes for distribution (Task `v3.54.0+`), documented consumption in `taskfiles/README.md`, and added fixture tests verified in `ci-self-test.yml` (Task 2.2).
 - **Build Task Contract (v1)**: Published `docs/build-contract.md` defining standard task names (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`), semantics, and shared variables for Go and Python repositories under the Phase 2 Taskfile rollout (Task 2.1). Docker/Node/mobile repositories are explicitly out of scope for v1.
 - **release.yml**: New workflow that automates version tagging and creates GitHub Releases on pushes to `main`.
 - **ci-self-test.yml**: New workflow that validates all workflow YAML files in this repo using `yamllint` and `actionlint` on every PR touching `.github/workflows/`.

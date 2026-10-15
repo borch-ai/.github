@@ -1,0 +1,64 @@
+# https://taskfile.dev
+version: '3'
+
+vars:
+  POWERWORD: 'echo [mock-powerword]'
+  MIN_COVERAGE: '50'
+
+includes:
+  org:
+    taskfile: ../../../taskfiles/go.yml
+    vars:
+      POWERWORD: '{{.POWERWORD}}'
+      MIN_COVERAGE: '{{.MIN_COVERAGE}}'
+
+tasks:
+  all:
+    desc: Run standard quality gate
+    cmds:
+      - task: org:all
+
+  build:
+    desc: Build binaries
+    cmds:
+      - task: org:build
+
+  test:
+    desc: Run tests
+    cmds:
+      - task: org:test
+
+  lint:
+    desc: Run linter
+    cmds:
+      - task: org:lint
+
+  fmt:
+    desc: Format code
+    cmds:
+      - task: org:fmt
+
+  tidy:
+    desc: Tidy dependencies
+    cmds:
+      - task: org:tidy
+
+  vuln:
+    desc: Vulnerability scan
+    cmds:
+      - task: org:vuln
+
+  check-coverage:
+    desc: Check test coverage
+    cmds:
+      - task: org:check-coverage
+
+  clean:
+    desc: Clean build outputs
+    cmds:
+      - task: org:clean
+
+  install-hooks:
+    desc: Install hooks
+    cmds:
+      - task: org:install-hooks
