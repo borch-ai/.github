@@ -51,7 +51,7 @@ Repos that provide these must use these names: `install`, `test-integration`,
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `MIN_COVERAGE` | `91` | Coverage threshold; CI passes the `coverage-threshold` input through this. |
+| `MIN_COVERAGE` | `91` | Coverage threshold; CI passes the `coverage-threshold` input through this. Note: existing Makefiles read `COVERAGE_THRESHOLD`; CI workflows and tooling will export both variables during migration for backward compatibility. |
 | `POWERWORD` | `powerword` | How to invoke Powerword (Powerword itself uses `go run ./cmd/powerword`). |
 | `VERSION` | `dev` | Version stamped into binaries. |
 

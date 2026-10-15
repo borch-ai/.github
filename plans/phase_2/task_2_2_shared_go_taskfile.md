@@ -27,18 +27,26 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 ### Override Semantics
 
 > [!NOTE]
-> **Override semantics.** Task namespaces includes (`org:lint`); it does not let a local
-> task silently replace an included one. The consumer pattern is: a repo's top-level
-> `Taskfile.yml` defines each contract task as a thin alias (`lint: { cmds: [task: org:lint] }`)
-> to *inherit*, or with its own commands to *override*. Task 2.3 ships a starter
-> Taskfile with all aliases pre-written. Evaluate `flatten`/`excludes` include options in
-> the pinned version as a possible simplification.
+> **Override semantics & root-qualified orchestration.** Task namespaces includes (`org:lint`);
+> it does not let a local task silently replace an included one. The consumer pattern is:
+> a repo's top-level `Taskfile.yml` defines each contract task as a thin alias
+> (`lint: { cmds: [task: org:lint] }`) to *inherit*, or with its own commands to *override*.
+> Crucially, when composite tasks inside `taskfiles/go.yml` (such as `all` or `check-coverage`)
+> invoke other contract tasks, they must use root-qualified calls (`:build`, `:lint`, `:vuln`,
+> `:check-coverage`, `:test` with a leading colon). This ensures that running `task all` or
+> triggering pre-push validation honors the consuming repository's root overrides rather than
+> defaulting to internal `org:*` tasks. Task 2.3 ships a starter Taskfile with all aliases
+> pre-written. Evaluate `flatten`/`excludes` include options in the pinned version as a possible
+> simplification.
 
 ## Acceptance Criteria
 
 - [ ] `taskfiles/go.yml` implements every required contract task (Task 2.1) using
   overridable vars: `MIN_COVERAGE`, `POWERWORD`, `VERSION`, `LDFLAGS`, `BINARIES`
   (list of `cmd/*` names), `TEST_PKGS`, `COVERPKG`.
+- [ ] Composite and orchestration tasks in `taskfiles/go.yml` (`all`, `check-coverage`)
+  invoke subtasks via root-qualified references (e.g. `:build`, `:lint`, `:vuln`,
+  `:check-coverage`, `:test`) so consumer root overrides take effect during aggregate execution.
 - [ ] `build` loops over `BINARIES` (default: every directory under `cmd/`) and uses
   `sources`/`generates` for incremental builds.
 - [ ] `lint`, `vuln`, `check-coverage` delegate to `{{.POWERWORD}}` with a
@@ -49,6 +57,8 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 - [ ] Minimum Task version declared and documented (latest v3.x at implementation time).
 - [ ] Distribution mechanism implemented (remote include docs **or** `taskfile-sync`
   reusable workflow).
+- [ ] Fixture tests in CI self-test verify both standard inheritance and that overriding
+  `build` or `lint` in a consumer root Taskfile executes the override when running `task all`.
 - [ ] Released under a new `.github` tag.
 
 ## Proposed Changes
@@ -56,7 +66,8 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 ### `taskfiles/go.yml` (new)
 
 - `version: '3'`, `vars:` with defaults per the contract, contract tasks with `desc:`.
-- `all: { deps: [lint, vuln, check-coverage], cmds: [task: build] }`.
+- `all: { deps: [":lint", ":vuln", ":check-coverage"], cmds: [task: :build] }`.
+- `check-coverage: { deps: [":test"], cmds: ["{{.POWERWORD}} check-coverage --min {{.MIN_COVERAGE}}"] }`.
 
 ### `taskfiles/hooks.yml` (new)
 

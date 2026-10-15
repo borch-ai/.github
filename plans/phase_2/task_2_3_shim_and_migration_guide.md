@@ -10,8 +10,9 @@ habits, docs, hooks, or CI mid-migration.
 
 > [!NOTE]
 > The shim keeps `make <target>` working by forwarding to `task <target>`. Powerword's
-> validation auto-detection (Powerword Task 5.12) prefers the Taskfile when it has an
-> `all` task, so the shim does not cause double execution.
+> validation auto-detection (Powerword Task 5.12) and reusable CI (Task 2.4) both switch to
+> Task only when the Taskfile defines `all` and the required contract tasks. Root overrides
+> in consumer Taskfiles are honored during `task all` via root-qualified dependencies.
 
 ## Acceptance Criteria
 
@@ -29,17 +30,20 @@ habits, docs, hooks, or CI mid-migration.
 
 - [ ] `templates/build/Taskfile.go.yml` — starter Taskfile that includes the org Go
   Taskfile (per Task 2.2's distribution decision) and defines every contract task as an
-  inherit-alias, with commented examples of overriding a task and adding a repo-specific
-  one.
+  inherit-alias, with commented examples of overriding a task (using root-qualified
+  delegation) and adding a repo-specific one.
 - [ ] `docs/taskfile-migration.md` — step-by-step guide matching the staged rollout:
 
-  | Stage | Repo state | `powerword review` runs |
-  |-------|-----------|-------------------------|
-  | 0 | Makefile only | `make all` |
-  | 1 | Starter Taskfile added, `all` not yet defined | `make all` (with warning) |
-  | 2 | Taskfile defines `all` | `task all` |
-  | 3 | Makefile replaced by shim | `task all` |
-  | 4 | Shim removed, docs updated | `task all` |
+  | Stage | Repo state | `powerword review` (local) | CI workflow |
+  |-------|-----------|----------------------------|-------------|
+  | 0 | Makefile only | `make all` | `make <target>` |
+  | 1 | Starter Taskfile added, but `all` or CI targets not yet defined | `make all` (warns missing tasks) | `make <target>` (warns missing tasks) |
+  | 2 | Taskfile defines `all` and all required CI contract tasks | `task all` | `task <target>` |
+  | 3 | Makefile replaced by shim | `task all` | `task <target>` |
+  | 4 | Shim removed, docs updated | `task all` | `task <target>` |
+
+- [ ] Guide explicitly documents that local pre-push and CI detection are synchronized on
+  the presence of `all` plus required targets so repos never experience a split runner state.
 
 - [ ] Guide includes a per-repo checklist: install Task, add starter Taskfile, port
   repo-specific targets, run `powerword doctor` (Powerword Task 5.13), bump reusable CI

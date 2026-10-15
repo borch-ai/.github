@@ -18,11 +18,15 @@ consuming repo beyond a tag bump.
 ### Detection Rule
 
 > [!IMPORTANT]
-> Detection rule (mirrors Powerword 5.12): use Task only if a Taskfile exists **and**
-> defines all CI-invoked tasks (`lint`, `tidy`, `vuln`, `check-coverage`, `build`);
-> otherwise fall back to Make, emitting a `::warning::` annotation that names the missing
-> tasks. If a Taskfile exists, tasks are missing, **and** there is no Makefile, fail the
-> job.
+> Detection rule (mirrors Powerword 5.12 and aligns with Task 2.3 migration stages):
+> Use Task only if a Taskfile exists **and** defines `all` **and** all CI-invoked tasks
+> (`lint`, `tidy`, `vuln`, `check-coverage`, `build`).
+>
+> Requiring `all` ensures CI and local pre-push validation (`powerword review`, which switches
+> when `all` exists) switch runners in exact lockstep, preventing any split-runner states
+> during Stage 1. If any required task (including `all`) is missing, fall back to Make,
+> emitting a `::warning::` annotation naming the missing tasks. If a Taskfile exists, tasks
+> are missing, **and** there is no Makefile, fail the job.
 
 ## Acceptance Criteria
 
@@ -34,12 +38,20 @@ consuming repo beyond a tag bump.
 - [ ] When `runner == task`, Task is installed via a SHA-pinned setup action (with
   version comment) or `go install github.com/go-task/task/v3/cmd/task@<version>`.
 - [ ] All build steps invoke `${{ steps.detect.outputs.runner }} <target>`.
-- [ ] The existing `coverage-threshold` input is passed as `MIN_COVERAGE` (env for Task,
-  `MIN_COVERAGE=...` arg for Make). Verify during implementation whether the input is
-  currently forwarded to `check-coverage` at all; fix if not.
+- [ ] The existing `coverage-threshold` input is forwarded to `check-coverage` in both
+  workflows (`go-ci-standalone.yml` and `go-ci-with-sibling.yml`) exporting BOTH
+  `MIN_COVERAGE` (for Task and updated Makefiles) and `COVERAGE_THRESHOLD` (for unchanged
+  legacy Makefiles) in the step environment (`MIN_COVERAGE: ${{ inputs.coverage-threshold }}`
+  and `COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}`). For Make invocations, also
+  supply both variables as command-line arguments
+  (`make check-coverage MIN_COVERAGE=... COVERAGE_THRESHOLD=...`).
 - [ ] Harden-runner remains the first step; egress audit covers the Task download host.
-- [ ] `ci-self-test.yml` exercises both runners against fixtures (Make-only fixture and
-  Task fixture from Task 2.2).
+- [ ] `ci-self-test.yml` exercises both runners against fixtures (Make-only fixture, full
+  Task fixture from Task 2.2, and a Stage 1 partial fixture missing `all` / missing a CI task
+  to assert clean fallback to Make with warning annotations).
+- [ ] `ci-self-test.yml` validates non-default `coverage-threshold` enforcement under both
+  runners (Make runner testing both `COVERAGE_THRESHOLD` and `MIN_COVERAGE`; Task runner testing
+  `MIN_COVERAGE`).
 - [ ] Released under a new tag; Dependabot picks it up in consumer repos.
 
 ## Proposed Changes
@@ -47,6 +59,8 @@ consuming repo beyond a tag bump.
 ### `.github/workflows/go-ci-standalone.yml`, `.github/workflows/go-ci-with-sibling.yml`
 
 - Add inputs, detection step, conditional Task install, parameterized run steps.
+- Ensure `check-coverage` exports both `MIN_COVERAGE` and `COVERAGE_THRESHOLD` (fixing
+  `go-ci-standalone.yml`, which previously did not forward `coverage-threshold` to the step).
 
 ### `.github/actions/setup-build-runner/action.yml` (new, recommended)
 
@@ -58,6 +72,7 @@ consuming repo beyond a tag bump.
 ### `.github/workflows/ci-self-test.yml`
 
 - Matrix over `fixture: [make, task, task-partial]` asserting the selected runner.
+- Assert that custom non-default coverage thresholds are honored by both Make and Task runners.
 
 ## Risk Assessment
 
