@@ -25,10 +25,13 @@ habits, docs, hooks, or CI mid-migration.
   # Transitional shim: forwards all targets to Task. See docs/taskfile-migration.md.
   .DEFAULT_GOAL := all
 
-  CONTRACT_TARGETS := all build test lint fmt tidy vuln check-coverage clean install-hooks
+  # Targets that must be explicitly declared so directories or files on disk
+  # (e.g. `build/`, `bin/`, or `all`) do not bypass Task execution.
+  # Append any colliding repository-specific targets here.
+  EXPLICIT_TARGETS := all build test lint fmt tidy vuln check-coverage clean install-hooks
 
-  .PHONY: $(CONTRACT_TARGETS)
-  $(CONTRACT_TARGETS):
+  .PHONY: $(EXPLICIT_TARGETS)
+  $(EXPLICIT_TARGETS):
   	@task $@
 
   %:
@@ -56,7 +59,8 @@ habits, docs, hooks, or CI mid-migration.
   (including release workflows such as `release-go-binary.yml`) and scripts have adopted
   Task-aware runners; repositories with any remaining Make callers remain safely at Stage 3.
 - [ ] Guide instructs adding any repository-specific targets that collide with directory or
-  file names (e.g. `dist/`, `docs/`) to `.PHONY` in the shim during the transition.
+  file names (e.g. `dist/`, `docs/`) to `EXPLICIT_TARGETS` in the shim so they receive both an
+  explicit forwarding recipe and a `.PHONY` declaration (avoiding disabled implicit-rule lookup).
 
 - [ ] Guide includes a per-repo checklist: install Task, add starter Taskfile, port
   repo-specific targets, run `powerword doctor` (Powerword Task 5.13), bump reusable CI
@@ -85,7 +89,7 @@ habits, docs, hooks, or CI mid-migration.
 
 | Risk | Likelihood | Mitigation |
 |------|-----------|------------|
-| Target names collide with existing directories or files (e.g. `build/`, `all`) | Low | Contract targets are explicitly declared in `.PHONY`; guide instructs adding any colliding repo-specific targets to `.PHONY`. |
+| Target names collide with existing directories or files (e.g. `build/`, `all`) | Low | Contract targets are explicitly declared in `EXPLICIT_TARGETS` with recipes and `.PHONY`; guide instructs adding colliding repo-specific targets to `EXPLICIT_TARGETS`. |
 | Premature shim removal breaks release workflows or external callers | Medium | Migration guide restricts Stage 4 until all workflows (including `release-go-binary.yml`) adopt Task runners; consumers remain at Stage 3 until migrated. |
 | Starter Taskfile drifts from `go.yml` | Medium | CI self-test (Task 2.2) also runs `task --list-all` on the starter to validate it parses. |
 

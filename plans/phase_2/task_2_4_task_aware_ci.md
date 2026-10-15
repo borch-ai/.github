@@ -3,11 +3,12 @@
 **Status:** Proposed
 **Depends On:** Task 2.1 (names only — can proceed in parallel with 2.2 and 2.3)
 
-`go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml` hardcode
-`make lint`, `make tidy`, `make vuln`, `make check-coverage`, and `make build`. Add a
-`build-runner` input with auto-detection matching Powerword's local resolver (Powerword
-Task 5.12), so a repo's CI switches to Task at the same moment its pre-push hook does —
-with no workflow edits in the consuming repo beyond a tag bump.
+`go-ci-standalone.yml` and `go-ci-with-sibling.yml` hardcode `make lint`, `make tidy`,
+`make vuln`, `make check-coverage`, and `make build`. `release-go-binary.yml` hardcodes
+`make lint`, `make tidy`, `make vuln`, and `make check-coverage` before its release step.
+Add a `build-runner` input with auto-detection matching Powerword's local resolver
+(Powerword Task 5.12), so a repo's CI switches to Task at the same moment its pre-push
+hook does — with no workflow edits in the consuming repo beyond a tag bump.
 
 ## User Review Required
 
@@ -22,16 +23,17 @@ with no workflow edits in the consuming repo beyond a tag bump.
 > Use Task only if a Taskfile exists **and** defines `all` **and** all CI-invoked tasks
 > (`lint`, `tidy`, `vuln`, `check-coverage`, `build`).
 >
-> Detection & installation sequencing:
+> Detection & installation sequencing (evaluated in the consumer checkout `working-directory`):
 >
-> 1. If `build-runner == make`: skip Task installation and use Make.
-> 2. If `build-runner == task`: install pinned Task and use Task.
-> 3. If `build-runner == auto`: inspect the workspace root for Taskfile existence. If no
+> 1. If `build-runner == make`: skip Task installation and use Make directly.
+> 2. If `build-runner == task`: install pinned Task unconditionally, assert that a Taskfile
+>    exists in `working-directory` (failing immediately if missing), and use Task.
+> 3. If `build-runner == auto`: inspect `working-directory` for Taskfile existence. If no
 >    Taskfile is found, skip Task install and fall back to Make immediately. If a Taskfile
->    is found, install pinned Task **before** probing tasks via `task --list-all --json`.
->    If `all` and all five CI tasks exist, select Task; otherwise fall back to Make,
->    emitting a `::warning::` annotation naming the missing tasks. If a Taskfile exists,
->    tasks are missing, **and** there is no Makefile, fail the job.
+>    is found, install pinned Task **before** probing tasks via `task --list-all --json`
+>    in `working-directory`. If `all` and all five CI tasks exist, select Task; otherwise
+>    fall back to Make, emitting a `::warning::` annotation naming the missing tasks. If
+>    a Taskfile exists, tasks are missing, **and** there is no Makefile, fail the job.
 
 ## Acceptance Criteria
 
@@ -39,12 +41,17 @@ with no workflow edits in the consuming repo beyond a tag bump.
   `go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml`.
 - [ ] New input `task-version` (default: pinned v3.x) so repos can bump independently.
 - [ ] A "Detect build runner" step outputs `runner` (`make`/`task`) and is reused by
-  every job that runs build commands.
+  every job that runs build commands, operating inside the consumer checkout directory
+  (`working-directory`, passing `inputs.repo-path` where applicable).
 - [ ] Pinned Task is installed via a SHA-pinned setup action (with version comment) or
   `go install github.com/go-task/task/v3/cmd/task@<version>` after discovering a Taskfile
-  but *prior* to probing tasks via `task --list-all --json` (skipped entirely for explicit
-  Make and Make-only auto runs).
-- [ ] All build steps invoke `${{ steps.detect.outputs.runner }} <target>`.
+  in `working-directory` but *prior* to probing tasks via `task --list-all --json`
+  (skipped entirely for explicit Make and Make-only auto runs; installed unconditionally
+  when `build-runner == task`).
+- [ ] All Make-backed quality gate steps invoke `${{ steps.detect.outputs.runner }} <target>`.
+  In `release-go-binary.yml`, only the pre-release checks (`lint`, `tidy`, `vuln`,
+  `check-coverage`) are runner-substituted; the downstream version-stamped cross-compilation
+  into `dist/` and GitHub release asset upload remain intact.
 - [ ] The existing `coverage-threshold` input is forwarded to `check-coverage` in all
   relevant workflows exporting BOTH `MIN_COVERAGE` (for Task and updated Makefiles) and
   `COVERAGE_THRESHOLD` (for unchanged legacy Makefiles) in the step environment
@@ -68,15 +75,23 @@ with no workflow edits in the consuming repo beyond a tag bump.
 - Add inputs, detection step, conditional Task install, parameterized run steps.
 - Ensure `check-coverage` exports both `MIN_COVERAGE` and `COVERAGE_THRESHOLD` (fixing
   `go-ci-standalone.yml`, which previously did not forward `coverage-threshold` to the step).
+- In `release-go-binary.yml`, parameterize `lint`, `tidy`, `vuln`, and `check-coverage`
+  with the detected runner while keeping the custom cross-compilation matrix into `dist/`
+  unchanged.
 
 ### `.github/actions/setup-build-runner/action.yml` (new, recommended)
 
 - Composite action shared by all three workflows to avoid duplicated logic.
-- Inputs: `build-runner`, `task-version`, `required-tasks`. Output: `runner`.
-- Logic: Taskfile discovery (same filename list as Powerword 5.12). If absent or
-  `build-runner == make`, output `make` without installing Task. If Taskfile is found or
-  `build-runner == task`, install pinned Task, probe task definitions with
-  `task --list-all --json`, and select runner (with fallback warnings as appropriate).
+- Inputs: `build-runner`, `task-version`, `required-tasks`, `working-directory` (default: `.`).
+  Output: `runner`.
+- Logic:
+  - If `build-runner == make`: output `make`, do not install Task.
+  - If `build-runner == task`: install pinned Task, verify Taskfile presence in
+    `working-directory` (fail if missing), output `task`.
+  - If `build-runner == auto`: check `working-directory` for Taskfile. If absent, output `make`
+    without installing Task. If present, install pinned Task, probe task definitions with
+    `task --list-all --json` in `working-directory`, and select `task` if `all` + required tasks
+    exist, else warn and fall back to `make`.
 
 ### `.github/workflows/ci-self-test.yml`
 
