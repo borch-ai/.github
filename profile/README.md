@@ -146,6 +146,16 @@ _No active niche scout data available. Data is automatically scanned and injecte
 
 ---
 
+## 🏗️ Build System & Task Contract
+
+All Borch-AI repositories adhere to the **[Build Task Contract](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md)** (Contract v1), providing consistent quality gates across local development, pre-push hooks, and automated CI pipelines:
+
+- **Standard Quality Gates**: `all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`.
+- **Tooling Interface**: Standardized invocation targets for `powerword review` and `powerword doctor`.
+- **Contract Specification**: See [Build Task Contract v1](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md).
+
+---
+
 ## 🚀 Getting Started
 
 To run the full publishing pipeline locally, you need the CLI tools. The entry point is **Kiln**:

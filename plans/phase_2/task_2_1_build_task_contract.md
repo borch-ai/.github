@@ -1,6 +1,6 @@
 # Plan: Task 2.1: Build Task Contract
 
-**Status:** Proposed
+**Status:** Complete
 **Depends On:** None
 
 Define the org-wide **build task contract**: the standard task names, their semantics, and
@@ -64,10 +64,10 @@ Repos that provide these must use these names: `install`, `test-integration`,
 
 ## Acceptance Criteria
 
-- [ ] `docs/build-contract.md` published with the content above, versioned as
+- [x] `docs/build-contract.md` published with the content above, versioned as
   "contract v1".
-- [ ] Linked from `profile/README.md` and the `.github` `README.md`.
-- [ ] Contract changes require bumping the contract version and a note in
+- [x] Linked from `profile/README.md` and the `.github` `README.md`.
+- [x] Contract changes require bumping the contract version and a note in
   `CHANGELOG.md`.
 
 ## Proposed Changes

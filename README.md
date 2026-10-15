@@ -13,6 +13,8 @@ This repository acts as the **Central Nexus & Configuration Registry** for the `
 ```text
 ├── assets/
 │   └── logo.png              # Org Nexus logo
+├── docs/
+│   └── build-contract.md     # Org-wide build task contract (v1)
 ├── CONTRIBUTING.md           # Organization-wide contribution guidelines
 ├── CODEOWNERS                # Shared repository ownership assignments
 └── .github/
@@ -30,6 +32,15 @@ This repository acts as the **Central Nexus & Configuration Registry** for the `
 
 ---
 
+## 🏗️ Build System & Task Contract
+
+Repositories across the Borch-AI organization adhere to the **[Build Task Contract v1](docs/build-contract.md)**. The contract defines the standard quality gates (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`) and shared variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`) required for all repos.
+
+- **Contract Specification:** [docs/build-contract.md](docs/build-contract.md)
+- **Phase 2 Migration Roadmap:** [ROADMAP.md](ROADMAP.md) (Taskfile build paradigm)
+
+---
+
 ## 🔒 Security & Reusable Workflows
 
 To ensure maximum security and protect against supply chain attacks, downstream factories (`pithos`, `aeolian`, `lighthouse`, `daedalus`, `lamplighter`) consume these workflows using **strict commit SHA pinning**:
@@ -40,5 +51,5 @@ jobs:
     uses: borch-ai/.github/.github/workflows/go-ci-with-sibling.yml@89b5ce47890d1cf60a71826f915ad5769f47e8f4 # v1.0.0
 ```
 
-* **Automated Tagging:** When updates are merged into the `main` branch of this repository, an automated post-merge `release.yml` job triggers, calculates the next semantic version tag from conventional commits, and creates a Git release.
-* **Auto-Advancing Pins:** Downstream repositories use Dependabot (configured with `github-actions` ecosystems) to automatically detect these new tags, resolve them to the new commit SHA, and open PRs to advance the pins.
+- **Automated Tagging:** When updates are merged into the `main` branch of this repository, an automated post-merge `release.yml` job triggers, calculates the next semantic version tag from conventional commits, and creates a Git release.
+- **Auto-Advancing Pins:** Downstream repositories use Dependabot (configured with `github-actions` ecosystems) to automatically detect these new tags, resolve them to the new commit SHA, and open PRs to advance the pins.

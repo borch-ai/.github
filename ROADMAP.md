@@ -76,7 +76,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
  .github 2.5 Python Taskfile ··· (after 2.2) ──► Inkling
 ```
 
-- [ ] **Task 2.1 — Build Task Contract** `[Size: S]` ⚡ quick win
+- [x] **Task 2.1 — Build Task Contract** `[Size: S]` ⚡ quick win
   Define the org-wide standard task names (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`), their semantics, and shared variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`). The interface that Powerword detection, shared Taskfiles, and CI depend on.
   [Implementation Plan](plans/phase_2/task_2_1_build_task_contract.md)
 
