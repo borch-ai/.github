@@ -1,6 +1,6 @@
 # Borch-AI Build Task Contract (v1)
 
-The **Build Task Contract** defines the standard task names, execution semantics, and shared variables that every Borch-AI repository exposes. It acts as a tool-agnostic interface across the ecosystem—whether a repository is currently orchestrated via Task (`Taskfile.yml`) or a legacy Makefile.
+The **Build Task Contract** defines the standard task names, execution semantics, and shared variables that Borch-AI repositories expose as they adopt the Phase 2 Taskfile build paradigm. It acts as a tool-agnostic interface across the ecosystem—whether a repository is orchestrated via Task (`Taskfile.yml`) or a transitional forwarding Makefile shim.
 
 The contract serves as the canonical specification for:
 
@@ -8,6 +8,14 @@ The contract serves as the canonical specification for:
 - **Conformance Auditing** (`powerword doctor`)
 - **Shared Taskfiles** (`Taskfile.go.yml`, `Taskfile.python.yml`)
 - **Task-Aware Reusable CI Workflows** in `.github`
+
+---
+
+## Scope & Rollout (Contract v1)
+
+- **Target Ecosystem:** Contract v1 targets Go-based and Python-based repositories participating in the Phase 2 build paradigm rollout (Kiln, Pithos, Powerword, Aeolian, Lighthouse, Daedalus, and Inkling), staged through the Kiln pilot migration.
+- **Explicit Exclusions:** Docker-heavy, Node.js-heavy, and frontend mobile repositories (specifically **Lamplighter**, **Knurl**, and **study-systems**) are **explicitly out of scope** for Contract v1. These repositories maintain their specialized tooling until future phases.
+- **Rollout Model:** The contract establishes the target interface for Phase 2. Conformance is achieved progressively as each repository completes its migration checklist (see `ROADMAP.md`).
 
 ---
 
@@ -48,7 +56,7 @@ Conforming build configurations accept and honor these standard environment vari
 
 | Variable | Default | Purpose |
 |----------|---------|---------|
-| `MIN_COVERAGE` | `91` | Code coverage percentage threshold. Reusable CI passes the `coverage-threshold` input through this variable. Note: Existing Makefiles read `COVERAGE_THRESHOLD`; CI workflows and migration tooling export both variables during the transition for backward compatibility. |
+| `MIN_COVERAGE` | `91` | Code coverage percentage threshold. Reusable CI workflows (Task 2.4) and migration tooling pass coverage threshold inputs through this variable. **Migration Note:** Existing Makefiles read `COVERAGE_THRESHOLD`. In current workflows prior to Task 2.4, `.github/workflows/go-ci-with-sibling.yml` exports only `COVERAGE_THRESHOLD`, while `go-ci-standalone.yml` defaults to local repo variables. When Task 2.4 lands, reusable workflows will export *both* `MIN_COVERAGE` and `COVERAGE_THRESHOLD` for dual-variable forwarding. In the interim, transitional Makefiles and Taskfiles should fall back gracefully (e.g. `MIN_COVERAGE ?= $(or $(COVERAGE_THRESHOLD),91)`). |
 | `POWERWORD` | `powerword` | Command or path used to invoke Powerword tooling (Powerword itself overrides this to `go run ./cmd/powerword`). |
 | `VERSION` | `dev` | Semantic version string stamped into binary builds via linker flags or package metadata. |
 
@@ -86,3 +94,11 @@ Historically, Kiln ran `lint build test` while Pithos and Powerword ran `lint vu
 ### How does `powerword doctor` verify compliance?
 
 `powerword doctor` inspects the active `Taskfile.yml` or `Makefile` in the repository, validates that all 10 required task names are present, verifies that the `task` executable is available, and flags non-conforming build setups.
+
+### Which repositories are within the scope of Contract v1?
+
+Contract v1 applies to Go-based and Python-based repositories participating in Phase 2 (Kiln, Pithos, Powerword, Aeolian, Lighthouse, Daedalus, and Inkling). Non-Go/Python repositories—specifically **Lamplighter** (React Native/mobile), **Knurl** (Node/TypeScript), and **study-systems**—are explicitly excluded from v1.
+
+### How does coverage variable forwarding work between Make and Task?
+
+Contract v1 defines `MIN_COVERAGE` as the standard variable name for Taskfiles, whereas legacy Makefiles expect `COVERAGE_THRESHOLD`. During Phase 2, Task 2.4 will update reusable CI workflows to export *both* variables simultaneously. Until Task 2.4 is deployed across all workflows, repos should accept both variables (e.g. `MIN_COVERAGE ?= $(COVERAGE_THRESHOLD)`) to ensure non-default CI thresholds continue to be enforced.

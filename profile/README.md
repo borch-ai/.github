@@ -148,11 +148,11 @@ _No active niche scout data available. Data is automatically scanned and injecte
 
 ## 🏗️ Build System & Task Contract
 
-All Borch-AI repositories adhere to the **[Build Task Contract](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md)** (Contract v1), providing consistent quality gates across local development, pre-push hooks, and automated CI pipelines:
+The Borch-AI ecosystem is standardizing on the **[Build Task Contract](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md)** (Contract v1) as the target interface for Go and Python repositories under the Phase 2 build paradigm rollout (beginning with the Kiln pilot):
 
-- **Standard Quality Gates**: `all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`.
+- **Target Quality Gates**: `all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`.
 - **Tooling Interface**: Standardized invocation targets for `powerword review` and `powerword doctor`.
-- **Contract Specification**: See [Build Task Contract v1](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md).
+- **Contract Specification & Scope**: See [Build Task Contract v1](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md) (Docker/Node-heavy repositories like Lamplighter, Knurl, and study-systems are explicitly out of scope for v1).
 
 ---
 

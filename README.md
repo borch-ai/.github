@@ -34,7 +34,7 @@ This repository acts as the **Central Nexus & Configuration Registry** for the `
 
 ## 🏗️ Build System & Task Contract
 
-Repositories across the Borch-AI organization adhere to the **[Build Task Contract v1](docs/build-contract.md)**. The contract defines the standard quality gates (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`) and shared variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`) required for all repos.
+The **[Build Task Contract v1](docs/build-contract.md)** defines the standard target interface across Borch-AI repositories. It standardizes quality gates (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`) and shared variables (`MIN_COVERAGE`, `POWERWORD`, `VERSION`) for Go and Python repositories under the Phase 2 Taskfile rollout (beginning with the Kiln pilot). Note that Docker/Node-heavy repositories (such as Lamplighter, Knurl, and study-systems) are explicitly out of scope for v1.
 
 - **Contract Specification:** [docs/build-contract.md](docs/build-contract.md)
 - **Phase 2 Migration Roadmap:** [ROADMAP.md](ROADMAP.md) (Taskfile build paradigm)
