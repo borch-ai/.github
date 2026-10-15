@@ -80,6 +80,21 @@ jobs:
           task all
           test -x bin/sample
           test -f coverage.out
+          test -f bin/.sample.config
+          grep -q "VERSION=dev" bin/.sample.config
+
+          # Verify up-to-date detection on unchanged build (no compile commands run)
+          BUILD_OUT=$(task build)
+          test -z "$BUILD_OUT"
+
+          # Verify rebuild on VERSION configuration change
+          task build VERSION=v1.0.0
+          grep -q "VERSION=v1.0.0" bin/.sample.config
+
+          # Verify rebuild on configuration restore
+          task build
+          grep -q "VERSION=dev" bin/.sample.config
+
           task clean
           test ! -d bin
           test ! -f coverage.out

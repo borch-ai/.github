@@ -17,6 +17,23 @@ This directory contains reusable, contract-conforming [Taskfile](https://taskfil
 
 Repositories include the shared taskfile directly from `.github` tagged releases via HTTPS remote includes. Task validates checksums and caches the downloaded taskfile locally under `.task/`.
 
+### First-Use Trust & Automation Setup
+
+Task requires trust verification before executing remote Taskfiles:
+
+- **Interactive Approval:** On initial execution in a developer terminal, Task prompts:
+
+  ```text
+  The task you are attempting to run depends on the remote Taskfile at "https://...".
+  --- Make sure you trust the source of this Taskfile before continuing ---
+  Continue? [y/N]
+  ```
+
+  Entering `y` approves and caches the remote Taskfile locally under `.task/`.
+- **Noninteractive CI Runners & Automation:** Headless CI environments cannot answer interactive prompts. To automate execution:
+  - **Checksum Pinning (Recommended):** Add `checksum: <sha256>` to the include declaration. When pinned, Task verifies the download checksum and bypasses the trust prompt.
+  - **Automation Flag:** Alternatively, run Task with `--yes` (or `-y`), for example `task --yes all`, to automatically approve remote downloads.
+
 ### Consuming in a Go Repository
 
 Create or update `Taskfile.yml` in the repository root:
@@ -27,11 +44,13 @@ version: '3'
 
 vars:
   POWERWORD: '{{.POWERWORD | default "powerword"}}'
-  MIN_COVERAGE: '{{.MIN_COVERAGE | default "91"}}'
+  MIN_COVERAGE: '{{.MIN_COVERAGE | default .COVERAGE_THRESHOLD | default "91"}}'
 
 includes:
   org:
     taskfile: https://raw.githubusercontent.com/borch-ai/.github/v0.3.0/taskfiles/go.yml
+    # Optional sha256 checksum pinning (recommended for headless CI runners):
+    # checksum: <sha256-checksum>
     vars:
       POWERWORD: '{{.POWERWORD}}'
       MIN_COVERAGE: '{{.MIN_COVERAGE}}'

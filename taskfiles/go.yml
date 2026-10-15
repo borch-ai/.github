@@ -31,15 +31,32 @@ tasks:
         vars:
           BIN: '{{.ITEM}}'
 
+  build-config:
+    internal: true
+    label: 'build-config-{{.BIN}}'
+    silent: true
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - |
+        echo "VERSION={{.VERSION}} LDFLAGS={{.LDFLAGS}} GOOS=${GOOS} GOARCH=${GOARCH}" > {{.BIN_DIR}}/.{{.BIN}}.config
+
   build-binary:
     internal: true
+    label: 'build-{{.BIN}}'
+    deps:
+      - task: build-config
+        vars:
+          BIN: '{{.BIN}}'
+          VERSION: '{{.VERSION}}'
+          LDFLAGS: '{{.LDFLAGS}}'
     sources:
-      - 'cmd/{{.BIN}}/*.go'
-      - 'cmd/{{.BIN}}/**/*.go'
-      - 'internal/*.go'
-      - 'internal/**/*.go'
-      - 'pkg/*.go'
-      - 'pkg/**/*.go'
+      - '{{.BIN_DIR}}/.{{.BIN}}.config'
+      - 'cmd/{{.BIN}}/**/*'
+      - 'cmd/{{.BIN}}/*'
+      - 'internal/**/*'
+      - 'internal/*'
+      - 'pkg/**/*'
+      - 'pkg/*'
       - 'go.mod'
       - 'go.sum'
     generates:
