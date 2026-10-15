@@ -3,11 +3,11 @@
 **Status:** Proposed
 **Depends On:** Task 2.1 (names only — can proceed in parallel with 2.2 and 2.3)
 
-`go-ci-standalone.yml` and `go-ci-with-sibling.yml` hardcode `make lint`, `make tidy`,
-`make vuln`, `make check-coverage`, and `make build`. Add a `build-runner` input with
-auto-detection matching Powerword's local resolver (Powerword Task 5.12), so a repo's CI
-switches to Task at the same moment its pre-push hook does — with no workflow edits in the
-consuming repo beyond a tag bump.
+`go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml` hardcode
+`make lint`, `make tidy`, `make vuln`, `make check-coverage`, and `make build`. Add a
+`build-runner` input with auto-detection matching Powerword's local resolver (Powerword
+Task 5.12), so a repo's CI switches to Task at the same moment its pre-push hook does —
+with no workflow edits in the consuming repo beyond a tag bump.
 
 ## User Review Required
 
@@ -22,27 +22,34 @@ consuming repo beyond a tag bump.
 > Use Task only if a Taskfile exists **and** defines `all` **and** all CI-invoked tasks
 > (`lint`, `tidy`, `vuln`, `check-coverage`, `build`).
 >
-> Requiring `all` ensures CI and local pre-push validation (`powerword review`, which switches
-> when `all` exists) switch runners in exact lockstep, preventing any split-runner states
-> during Stage 1. If any required task (including `all`) is missing, fall back to Make,
-> emitting a `::warning::` annotation naming the missing tasks. If a Taskfile exists, tasks
-> are missing, **and** there is no Makefile, fail the job.
+> Detection & installation sequencing:
+>
+> 1. If `build-runner == make`: skip Task installation and use Make.
+> 2. If `build-runner == task`: install pinned Task and use Task.
+> 3. If `build-runner == auto`: inspect the workspace root for Taskfile existence. If no
+>    Taskfile is found, skip Task install and fall back to Make immediately. If a Taskfile
+>    is found, install pinned Task **before** probing tasks via `task --list-all --json`.
+>    If `all` and all five CI tasks exist, select Task; otherwise fall back to Make,
+>    emitting a `::warning::` annotation naming the missing tasks. If a Taskfile exists,
+>    tasks are missing, **and** there is no Makefile, fail the job.
 
 ## Acceptance Criteria
 
-- [ ] New input `build-runner` (`auto` | `make` | `task`, default `auto`) on both
-  workflows.
+- [ ] New input `build-runner` (`auto` | `make` | `task`, default `auto`) on
+  `go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml`.
 - [ ] New input `task-version` (default: pinned v3.x) so repos can bump independently.
 - [ ] A "Detect build runner" step outputs `runner` (`make`/`task`) and is reused by
   every job that runs build commands.
-- [ ] When `runner == task`, Task is installed via a SHA-pinned setup action (with
-  version comment) or `go install github.com/go-task/task/v3/cmd/task@<version>`.
+- [ ] Pinned Task is installed via a SHA-pinned setup action (with version comment) or
+  `go install github.com/go-task/task/v3/cmd/task@<version>` after discovering a Taskfile
+  but *prior* to probing tasks via `task --list-all --json` (skipped entirely for explicit
+  Make and Make-only auto runs).
 - [ ] All build steps invoke `${{ steps.detect.outputs.runner }} <target>`.
-- [ ] The existing `coverage-threshold` input is forwarded to `check-coverage` in both
-  workflows (`go-ci-standalone.yml` and `go-ci-with-sibling.yml`) exporting BOTH
-  `MIN_COVERAGE` (for Task and updated Makefiles) and `COVERAGE_THRESHOLD` (for unchanged
-  legacy Makefiles) in the step environment (`MIN_COVERAGE: ${{ inputs.coverage-threshold }}`
-  and `COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}`). For Make invocations, also
+- [ ] The existing `coverage-threshold` input is forwarded to `check-coverage` in all
+  relevant workflows exporting BOTH `MIN_COVERAGE` (for Task and updated Makefiles) and
+  `COVERAGE_THRESHOLD` (for unchanged legacy Makefiles) in the step environment
+  (`MIN_COVERAGE: ${{ inputs.coverage-threshold }}` and
+  `COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}`). For Make invocations, also
   supply both variables as command-line arguments
   (`make check-coverage MIN_COVERAGE=... COVERAGE_THRESHOLD=...`).
 - [ ] Harden-runner remains the first step; egress audit covers the Task download host.
@@ -56,7 +63,7 @@ consuming repo beyond a tag bump.
 
 ## Proposed Changes
 
-### `.github/workflows/go-ci-standalone.yml`, `.github/workflows/go-ci-with-sibling.yml`
+### `.github/workflows/go-ci-standalone.yml`, `.github/workflows/go-ci-with-sibling.yml`, `.github/workflows/release-go-binary.yml`
 
 - Add inputs, detection step, conditional Task install, parameterized run steps.
 - Ensure `check-coverage` exports both `MIN_COVERAGE` and `COVERAGE_THRESHOLD` (fixing
@@ -64,10 +71,12 @@ consuming repo beyond a tag bump.
 
 ### `.github/actions/setup-build-runner/action.yml` (new, recommended)
 
-- Composite action shared by both workflows to avoid duplicated logic.
+- Composite action shared by all three workflows to avoid duplicated logic.
 - Inputs: `build-runner`, `task-version`, `required-tasks`. Output: `runner`.
-- Logic: Taskfile discovery (same filename list as Powerword 5.12), `task --list-all
-  --json` check, Make fallback, warning/failure annotations.
+- Logic: Taskfile discovery (same filename list as Powerword 5.12). If absent or
+  `build-runner == make`, output `make` without installing Task. If Taskfile is found or
+  `build-runner == task`, install pinned Task, probe task definitions with
+  `task --list-all --json`, and select runner (with fallback warnings as appropriate).
 
 ### `.github/workflows/ci-self-test.yml`
 
@@ -79,8 +88,8 @@ consuming repo beyond a tag bump.
 | Risk | Likelihood | Mitigation |
 |------|-----------|------------|
 | Detection drift vs. Powerword's local resolver | Medium | Same filename list and rules documented in both plans; self-test covers the partial case. |
-| Task install adds CI time / supply-chain surface | Low | Install only when needed; pinned version and SHA. |
-| `with-sibling` `patch-gomod` flow depends on Make | Medium | Keep `patch-gomod` as a repo-specific task; workflow calls it via the detected runner. |
+| Task install adds CI time / supply-chain surface | Low | Install only when Taskfile is present or runner is explicitly task; pinned version and SHA. |
+| Sibling checkout layout and repo-specific targets | Low | `go-ci-with-sibling.yml` executes build commands strictly within `repo-path` and does not invoke `patch-gomod`; runner detection operates inside `repo-path` preserving checkout layout without introducing prerequisite tasks. |
 
 ## Verification Plan
 

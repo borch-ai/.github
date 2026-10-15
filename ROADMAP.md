@@ -89,7 +89,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
   [Implementation Plan](plans/phase_2/task_2_3_shim_and_migration_guide.md)
 
 - [ ] **Task 2.4 — Task-Aware Reusable Go CI Workflows** `[Size: M]`
-  Add a `build-runner` (`auto`/`make`/`task`) input to `go-ci-standalone.yml` and `go-ci-with-sibling.yml`, with detection mirroring Powerword 5.12 and a pinned Task install.
+  Add a `build-runner` (`auto`/`make`/`task`) input to `go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml`, with detection mirroring Powerword 5.12 and a pinned Task install.
   [Implementation Plan](plans/phase_2/task_2_4_task_aware_ci.md)
 
 - [ ] **Task 2.5 — Shared Python Taskfile** `[Size: S]`

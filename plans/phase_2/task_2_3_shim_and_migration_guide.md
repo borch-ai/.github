@@ -16,13 +16,21 @@ habits, docs, hooks, or CI mid-migration.
 
 ## Acceptance Criteria
 
-- [ ] `templates/build/Makefile.shim` — forwarding Makefile (recipe line must use a
-  literal tab, hence the scoped MD010 disable):
+- [ ] `templates/build/Makefile.shim` — forwarding Makefile with explicit `.PHONY`
+  declarations for contract targets so directories like `build/` or files named `all` do
+  not bypass forwarding (recipe lines must use a literal tab, hence MD010 disable):
 
   <!-- markdownlint-disable MD010 -->
   ```make
   # Transitional shim: forwards all targets to Task. See docs/taskfile-migration.md.
   .DEFAULT_GOAL := all
+
+  CONTRACT_TARGETS := all build test lint fmt tidy vuln check-coverage clean install-hooks
+
+  .PHONY: $(CONTRACT_TARGETS)
+  $(CONTRACT_TARGETS):
+  	@task $@
+
   %:
   	@task $@
   ```
@@ -40,10 +48,15 @@ habits, docs, hooks, or CI mid-migration.
   | 1 | Starter Taskfile added, but `all` or CI targets not yet defined | `make all` (warns missing tasks) | `make <target>` (warns missing tasks) |
   | 2 | Taskfile defines `all` and all required CI contract tasks | `task all` | `task <target>` |
   | 3 | Makefile replaced by shim | `task all` | `task <target>` |
-  | 4 | Shim removed, docs updated | `task all` | `task <target>` |
+  | 4 | Shim removed, docs updated (only after all callers migrated) | `task all` | `task <target>` |
 
 - [ ] Guide explicitly documents that local pre-push and CI detection are synchronized on
   the presence of `all` plus required targets so repos never experience a split runner state.
+- [ ] Guide notes that Stage 4 (shim removal) is only permitted once all calling workflows
+  (including release workflows such as `release-go-binary.yml`) and scripts have adopted
+  Task-aware runners; repositories with any remaining Make callers remain safely at Stage 3.
+- [ ] Guide instructs adding any repository-specific targets that collide with directory or
+  file names (e.g. `dist/`, `docs/`) to `.PHONY` in the shim during the transition.
 
 - [ ] Guide includes a per-repo checklist: install Task, add starter Taskfile, port
   repo-specific targets, run `powerword doctor` (Powerword Task 5.13), bump reusable CI
@@ -72,7 +85,8 @@ habits, docs, hooks, or CI mid-migration.
 
 | Risk | Likelihood | Mitigation |
 |------|-----------|------------|
-| Shim's pattern rule shadows real files named like targets | Low | Document the edge case in troubleshooting. |
+| Target names collide with existing directories or files (e.g. `build/`, `all`) | Low | Contract targets are explicitly declared in `.PHONY`; guide instructs adding any colliding repo-specific targets to `.PHONY`. |
+| Premature shim removal breaks release workflows or external callers | Medium | Migration guide restricts Stage 4 until all workflows (including `release-go-binary.yml`) adopt Task runners; consumers remain at Stage 3 until migrated. |
 | Starter Taskfile drifts from `go.yml` | Medium | CI self-test (Task 2.2) also runs `task --list-all` on the starter to validate it parses. |
 
 ## Verification Plan
