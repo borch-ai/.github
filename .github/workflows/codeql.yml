@@ -29,7 +29,7 @@ jobs:
 
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
         with:
           egress-policy: audit
 
@@ -62,7 +62,7 @@ jobs:
       # Initialize CodeQL tools for PRs (standard query suite for speed)
       - name: Initialize CodeQL (PR)
         if: github.event_name == 'pull_request'
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:
           languages: ${{ inputs.language }}
           build-mode: ${{ inputs.build-mode }}
@@ -70,7 +70,7 @@ jobs:
       # Initialize CodeQL tools for pushes and schedules (complete/extended query suite)
       - name: Initialize CodeQL (Push/Schedule)
         if: github.event_name != 'pull_request'
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        uses: github/codeql-action/init@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:
           languages: ${{ inputs.language }}
           queries: security-extended
@@ -79,7 +79,7 @@ jobs:
       # Compile code automatically using Autobuild (if build-mode is autobuild)
       - name: Autobuild
         if: ${{ inputs.build-mode == 'autobuild' }}
-        uses: github/codeql-action/autobuild@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        uses: github/codeql-action/autobuild@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
 
       # Compile code using custom build command (if build-mode is manual)
       - name: Custom Build
@@ -88,6 +88,6 @@ jobs:
 
       # Perform the analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        uses: github/codeql-action/analyze@9b3254085494b55a0f7c4c2b3d2d52cc712ce370 # v4
         with:
           category: "/language:${{ inputs.language }}"
