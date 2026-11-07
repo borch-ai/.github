@@ -83,17 +83,25 @@ jobs:
           test -f bin/.sample.config
           grep -q "VERSION=dev" bin/.sample.config
 
-          # Verify up-to-date detection on unchanged build (no compile commands run)
-          BUILD_OUT=$(task build)
-          test -z "$BUILD_OUT"
+          # Verify default embedded version in compiled binary
+          ./bin/sample | grep -q "hello world (dev)"
+
+          # Verify up-to-date detection on unchanged build (capture stderr; no compile commands run)
+          BUILD_OUT=$(task build 2>&1)
+          echo "$BUILD_OUT" | grep -q 'Task "build-sample" is up to date'
+          ! echo "$BUILD_OUT" | grep -q 'go build'
 
           # Verify rebuild on VERSION configuration change
-          task build VERSION=v1.0.0
+          REBUILD_OUT=$(task build VERSION=v1.0.0 2>&1)
+          echo "$REBUILD_OUT" | grep -q 'go build'
           grep -q "VERSION=v1.0.0" bin/.sample.config
+          ./bin/sample | grep -q "hello world (v1.0.0)"
 
           # Verify rebuild on configuration restore
-          task build
+          RESTORE_OUT=$(task build 2>&1)
+          echo "$RESTORE_OUT" | grep -q 'go build'
           grep -q "VERSION=dev" bin/.sample.config
+          ./bin/sample | grep -q "hello world (dev)"
 
           task clean
           test ! -d bin

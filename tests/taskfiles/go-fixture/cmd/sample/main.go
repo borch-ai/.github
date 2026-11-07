@@ -6,6 +6,8 @@ import (
 	"example.com/testfixture/pkg/greet"
 )
 
+var version = "dev"
+
 func main() {
-	fmt.Println(greet.Hello())
+	fmt.Printf("%s (%s)\n", greet.Hello(), version)
 }
