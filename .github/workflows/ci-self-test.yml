@@ -89,7 +89,10 @@ jobs:
           # Verify up-to-date detection on unchanged build (capture stderr; no compile commands run)
           BUILD_OUT=$(task build 2>&1)
           echo "$BUILD_OUT" | grep -q 'Task "build-sample" is up to date'
-          ! echo "$BUILD_OUT" | grep -q 'go build'
+          if echo "$BUILD_OUT" | grep -q 'go build'; then
+            echo "Unexpected go build on up-to-date binary"
+            exit 1
+          fi
 
           # Verify rebuild on VERSION configuration change
           REBUILD_OUT=$(task build VERSION=v1.0.0 2>&1)
