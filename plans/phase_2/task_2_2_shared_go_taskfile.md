@@ -43,8 +43,8 @@ Aeolian, Daedalus, Kiln, Pithos, Lighthouse, and Powerword.
 - [x] Composite and orchestration tasks in `taskfiles/go.yml` (`all`, `check-coverage`)
   invoke subtasks via root-qualified references (e.g. `:build`, `:lint`, `:vuln`,
   `:check-coverage`, `:test`) so consumer root overrides take effect during aggregate execution.
-- [x] `build` loops over `BINARIES` (default: every directory under `cmd/`) and uses
-  `sources`/`generates` for incremental builds.
+- [x] `build` loops over `BINARIES` (default: every directory under `cmd/`) and delegates
+  incremental build caching to Go's native `GOCACHE` (`go build`).
 - [x] `lint`, `vuln`, `check-coverage` delegate to `{{.POWERWORD}}` with a
   `preconditions` check that prints an install hint when the default `powerword` binary
   is missing (skipped when `POWERWORD` is overridden).

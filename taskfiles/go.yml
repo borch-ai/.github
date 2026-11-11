@@ -31,44 +31,9 @@ tasks:
         vars:
           BIN: '{{.ITEM}}'
 
-  build-config:
-    internal: true
-    label: 'build-config-{{.BIN}}'
-    silent: true
-    cmds:
-      - mkdir -p {{.BIN_DIR}}
-      - |
-        REPLACE_STATE=""
-        for dir in $(go list -m -f '{{if and .Replace .Replace.Dir}}{{.Replace.Dir}}{{end}}' all 2>/dev/null); do
-          if [ -d "$dir" ]; then
-            REPLACE_STATE="${REPLACE_STATE}$(find "$dir" -type f ! -path '*/.git/*' ! -path '*/.task/*' | LC_ALL=C sort | while IFS= read -r f; do cksum "$f"; done)"
-          fi
-        done
-        printf "VERSION=%s LDFLAGS=%s GOOS=%s GOARCH=%s REPLACE=%s\n" {{shellQuote .VERSION}} {{shellQuote .LDFLAGS}} "${GOOS}" "${GOARCH}" "$(printf '%s' "$REPLACE_STATE" | cksum)" > {{.BIN_DIR}}/.{{.BIN}}.config
-
   build-binary:
     internal: true
     label: 'build-{{.BIN}}'
-    deps:
-      - task: build-config
-        vars:
-          BIN: '{{.BIN}}'
-          VERSION: '{{.VERSION}}'
-          LDFLAGS: '{{.LDFLAGS}}'
-    sources:
-      - '{{.BIN_DIR}}/.{{.BIN}}.config'
-      - '*.go'
-      - '**/*.go'
-      - 'cmd/{{.BIN}}/**/*'
-      - 'cmd/{{.BIN}}/*'
-      - 'internal/**/*'
-      - 'internal/*'
-      - 'pkg/**/*'
-      - 'pkg/*'
-      - 'go.mod'
-      - 'go.sum'
-    generates:
-      - '{{.BIN_DIR}}/{{.BIN}}'
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - go build -ldflags={{shellQuote .LDFLAGS}} -o {{.BIN_DIR}}/{{.BIN}} ./cmd/{{.BIN}}
