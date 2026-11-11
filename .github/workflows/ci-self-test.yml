@@ -106,6 +106,52 @@ jobs:
           grep -q "VERSION=dev" bin/.sample.config
           ./bin/sample | grep -q "hello world (dev)"
 
+          # Verify LDFLAGS containing embedded quotes are passed as a single argument
+          QUOTED_LDFLAGS_OUT=$(task build 'LDFLAGS=-s -w -X "main.version=v2.0.0"' 2>&1)
+          echo "$QUOTED_LDFLAGS_OUT" | grep -q 'go build'
+          ./bin/sample | grep -q "hello world (v2.0.0)"
+
+          # Verify local replacement module edits invalidate the build cache
+          TMP_DEP=$(mktemp -d)
+          cat > "$TMP_DEP/go.mod" <<'EOF'
+          module example.com/siblingdep
+
+          go 1.22
+          EOF
+          cat > "$TMP_DEP/dep.go" <<'EOF'
+          package siblingdep
+
+          func Tag() string { return "v1" }
+          EOF
+          cp go.mod go.mod.bak
+          cat >> go.mod <<EOF
+
+          require example.com/siblingdep v0.0.0
+          replace example.com/siblingdep => $TMP_DEP
+          EOF
+          task build >/dev/null 2>&1
+          UP_TO_DATE_DEP=$(task build 2>&1)
+          echo "$UP_TO_DATE_DEP" | grep -q 'Task "build-sample" is up to date'
+          cat > "$TMP_DEP/dep.go" <<'EOF'
+          package siblingdep
+
+          func Tag() string { return "v2" }
+          EOF
+          DEP_REBUILD_OUT=$(task build 2>&1)
+          echo "$DEP_REBUILD_OUT" | grep -q 'go build'
+          mv go.mod.bak go.mod
+          rm -rf "$TMP_DEP"
+
+          # Verify check-coverage and all fail (nonzero exit) when coverage is below MIN_COVERAGE
+          if task check-coverage MIN_COVERAGE=90 >/dev/null 2>&1; then
+            echo "Expected check-coverage to fail when coverage is below MIN_COVERAGE=90"
+            exit 1
+          fi
+          if task all MIN_COVERAGE=90 >/dev/null 2>&1; then
+            echo "Expected task all to fail when coverage is below MIN_COVERAGE=90"
+            exit 1
+          fi
+
           task clean
           test ! -d bin
           test ! -f coverage.out

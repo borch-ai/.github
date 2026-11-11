@@ -38,7 +38,13 @@ tasks:
     cmds:
       - mkdir -p {{.BIN_DIR}}
       - |
-        echo "VERSION={{.VERSION}} LDFLAGS={{.LDFLAGS}} GOOS=${GOOS} GOARCH=${GOARCH}" > {{.BIN_DIR}}/.{{.BIN}}.config
+        REPLACE_STATE=""
+        for dir in $(go list -m -f '{{if and .Replace .Replace.Dir}}{{.Replace.Dir}}{{end}}' all 2>/dev/null); do
+          if [ -d "$dir" ]; then
+            REPLACE_STATE="${REPLACE_STATE}$(find "$dir" -type f ! -path '*/.git/*' ! -path '*/.task/*' | LC_ALL=C sort | while IFS= read -r f; do cksum "$f"; done)"
+          fi
+        done
+        printf "VERSION=%s LDFLAGS=%s GOOS=%s GOARCH=%s REPLACE=%s\n" {{shellQuote .VERSION}} {{shellQuote .LDFLAGS}} "${GOOS}" "${GOARCH}" "$(printf '%s' "$REPLACE_STATE" | cksum)" > {{.BIN_DIR}}/.{{.BIN}}.config
 
   build-binary:
     internal: true
@@ -65,7 +71,7 @@ tasks:
       - '{{.BIN_DIR}}/{{.BIN}}'
     cmds:
       - mkdir -p {{.BIN_DIR}}
-      - go build -ldflags="{{.LDFLAGS}}" -o {{.BIN_DIR}}/{{.BIN}} ./cmd/{{.BIN}}
+      - go build -ldflags={{shellQuote .LDFLAGS}} -o {{.BIN_DIR}}/{{.BIN}} ./cmd/{{.BIN}}
 
   test:
     desc: Run unit tests with race detection and generate coverage profile

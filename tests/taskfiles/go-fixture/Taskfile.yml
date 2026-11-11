@@ -2,8 +2,8 @@
 version: '3'
 
 vars:
-  POWERWORD: 'echo [mock-powerword]'
-  MIN_COVERAGE: '50'
+  POWERWORD: '{{.POWERWORD | default "../mock-powerword.sh"}}'
+  MIN_COVERAGE: '{{.MIN_COVERAGE | default .COVERAGE_THRESHOLD | default "50"}}'
 
 includes:
   org:
