@@ -16,6 +16,9 @@ includes:
   org:
     # Pin to the latest borch-ai/.github release tag that ships taskfiles/go.yml:
     taskfile: https://raw.githubusercontent.com/borch-ai/.github/main/taskfiles/go.yml
+    # Pin the SHA-256 checksum of taskfiles/go.yml so unattended CI runners
+    # verify the include without an interactive first-use trust prompt:
+    # checksum: <sha256-checksum>
     vars:
       MIN_COVERAGE: '{{.MIN_COVERAGE}}'
       POWERWORD: '{{.POWERWORD}}'
@@ -87,9 +90,9 @@ tasks:
   #     - task: org:build
 
   # ---------------------------------------------------------------------------
-  # Example 2: Adding a repository-specific task
+  # Example 2: Adding an optional reserved or repository-specific task
   # ---------------------------------------------------------------------------
-  # integration-test:
+  # test-integration:
   #   desc: Run integration tests against live services or sibling binaries
   #   cmds:
   #     - go test -v -race -tags=integration -timeout=120s ./...

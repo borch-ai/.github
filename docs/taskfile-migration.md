@@ -8,13 +8,13 @@ Using the transitional `Makefile.shim` and starter `Taskfile.go.yml` templates i
 
 ## Staged Rollout Model
 
-Both `powerword review --local` (Powerword Task 5.12) and the reusable GitHub Actions workflows (`.github` Task 2.4) synchronize their runner auto-detection on the exact same condition: **a `Taskfile.yml` that defines `all` plus the required CI contract targets**. Because both local and CI runners switch together, repositories never experience a split runner state.
+Both `powerword review --local` (Powerword Task 5.12) and the reusable GitHub Actions workflows (`.github` Task 2.4) synchronize their runner auto-detection on the exact same condition: **a `Taskfile.yml` that defines `all` plus the five CI-invoked contract targets (`build`, `test`, `lint`, `vuln`, and `check-coverage`)**. Because both local and CI runners switch together, repositories never experience a split runner state.
 
 | Stage | Repo state | `powerword review` (local) | CI workflow |
 |-------|-----------|----------------------------|-------------|
 | 0 | Makefile only | `make all` | `make <target>` |
-| 1 | Starter Taskfile added, but `all` or CI targets not yet defined | `make all` (warns missing tasks) | `make <target>` (warns missing tasks) |
-| 2 | Taskfile defines `all` and all required CI contract tasks | `task all` | `task <target>` |
+| 1 | Starter Taskfile added, but `all` or any of the 5 CI contract targets not yet defined | `make all` (warns missing tasks) | `make <target>` (warns missing tasks) |
+| 2 | Taskfile defines all 10 required contract targets (passing `powerword doctor`) | `task all` | `task <target>` |
 | 3 | Makefile replaced by shim | `task all` | `task <target>` |
 | 4 | Shim removed, docs updated (only after all callers migrated) | `task all` | `task <target>` |
 
@@ -30,23 +30,28 @@ Follow these steps in order when migrating a repository:
 
 - [ ] **1. Install Task (v3.54.0+)**
   Ensure `task` (`go-task`) v3.54.0 or newer is installed locally:
+
   ```bash
   brew install go-task
   # or:
   go install github.com/go-task/task/v3/cmd/task@v3.54.0
   ```
-- [ ] **2. Add the Starter Taskfile (`Taskfile.yml`)**
-  Copy [`templates/build/Taskfile.go.yml`](../templates/build/Taskfile.go.yml) to `Taskfile.yml` at the root of the repository and pin the `includes.org.taskfile` URL to the latest `borch-ai/.github` release tag.
+
+- [ ] **2. Add the Starter Taskfile (`Taskfile.yml`) & Configure Remote Include Trust**
+  Copy [`templates/build/Taskfile.go.yml`](../templates/build/Taskfile.go.yml) to `Taskfile.yml` at the root of the repository and pin `includes.org.taskfile` to the latest `borch-ai/.github` release tag.
+  - Because Task requires first-use trust verification before running remote Taskfiles, also set `includes.org.checksum: <sha256>` (recommended so fresh, unattended CI runners and `Makefile.shim` calls bypass the interactive trust prompt automatically) or configure noninteractive invocations to pass `--yes` (`-y`), as documented in [`taskfiles/README.md`](../taskfiles/README.md#first-use-trust--automation-setup).
 - [ ] **3. Configure Variables & Port Repository-Specific Targets**
   - Set `MIN_COVERAGE`, `BINARIES`, `LDFLAGS`, or `TEST_PKGS` under `vars:` in `Taskfile.yml` if the repository differs from the defaults in [`taskfiles/go.yml`](../taskfiles/go.yml).
   - If a standard contract target (such as `build` or `lint`) needs custom pre/post steps, replace its alias in `Taskfile.yml` with your custom commands and delegate to `task: org:<target>` as needed. Because `org:all` and `org:check-coverage` invoke subtasks via root-qualified references (`:lint`, `:vuln`, `:check-coverage`, `:build`, `:test`), your root override will automatically run during `task all`.
-  - Port any non-contract targets (e.g., `integration-test`, `fix-plans`, `proto`) into `Taskfile.yml`.
+  - Port any optional reserved targets (such as `test-integration`) or repository-specific targets (`fix-plans`, `proto`) into `Taskfile.yml`.
 - [ ] **4. Verify Contract Compliance with `powerword doctor`**
   Run `powerword doctor` (Powerword Task 5.13) and `task all` locally to verify that all required Build Contract v1 targets exist and pass:
+
   ```bash
   powerword doctor
   task all
   ```
+
 - [ ] **5. Bump Reusable CI Workflow Tag**
   Update `.github/workflows/ci.yml` (and `.github/workflows/release.yml`, if applicable) to reference the Task-aware `.github` reusable workflow release tag (`.github` Task 2.4).
 - [ ] **6. Replace `Makefile` with `Makefile.shim` (Stage 3)**
@@ -80,13 +85,17 @@ Install Task v3.54.0+ via Homebrew (`brew install go-task`) or Go (`go install g
 ### Remote Include Cache & Offline Execution
 Task v3.54.0+ caches remote `includes` under `.task/remote/` in the repository root and verifies checksums automatically.
 - To force-refresh a cached remote Taskfile after bumping a tag:
+
   ```bash
   task --download
   ```
+
 - Add `.task/` to `.gitignore` so cached remote Taskfiles and checksum state are never committed.
 
 ### Why does `powerword review` (or CI) still run `make all`?
-Both `powerword review --local` and the reusable CI workflows only switch from `make` to `task` when `Taskfile.yml` defines `all` **and** every required contract target (`build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, `install-hooks`). Run `powerword doctor` to see which contract target is missing from your root `Taskfile.yml`.
+Runner auto-detection and full Build Contract v1 conformance check slightly different task sets:
+- **Runner selection (`powerword review --local` and reusable CI workflows):** switches from `make` to `task` when `Taskfile.yml` defines `all` plus the five CI-invoked contract targets (`build`, `test`, `lint`, `vuln`, and `check-coverage`). If any of those six tasks is missing, auto-detection warns and falls back to `make`.
+- **Full Build Contract v1 conformance (`powerword doctor`):** verifies that all ten required contract targets (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`) are defined in the root `Taskfile.yml`. Run `powerword doctor` to see which required target is missing.
 
 ### `make <target>` says ``make: `<target>' is up to date``
 This happens when `<target>` matches a directory or file name on disk (such as `build/`, `dist/`, or `docs/`). In GNU Make, `.PHONY` alone does not trigger pattern rules (`%:`) for existing paths. Add the target name to `EXPLICIT_TARGETS` in your `Makefile` shim so it receives both `.PHONY` and an explicit `@task $@` recipe.

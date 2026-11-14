@@ -134,7 +134,7 @@ verify_starter_and_shim() {
     "$REPO_ROOT/templates/build/Taskfile.go.yml" > "$TMP_SHIM_DIR/Taskfile.yml"
 
   cd "$TMP_SHIM_DIR"
-  task --list-all | grep -q "all:"
+  task --color=false --list-all | grep -q "all:"
   POWERWORD="$SCRIPT_DIR/mock-powerword.sh" MIN_COVERAGE=50 make all
   test -x bin/sample
   test -f coverage.out
