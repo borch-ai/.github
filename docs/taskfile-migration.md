@@ -8,7 +8,7 @@ Using the transitional `Makefile.shim` and starter `Taskfile.go.yml` templates i
 
 ## Staged Rollout Model
 
-Both `powerword review --local` (Powerword Task 5.12) and the reusable GitHub Actions workflows (`.github` Task 2.4) synchronize their runner auto-detection on the exact same condition: **a `Taskfile.yml` that defines `all` plus the five CI-invoked contract targets (`build`, `test`, `lint`, `vuln`, and `check-coverage`)**. Because both local and CI runners switch together, repositories never experience a split runner state.
+Both `powerword review --local` (Powerword Task 5.12) and the reusable GitHub Actions workflows (`.github` Task 2.4) synchronize their runner auto-detection on the exact same condition: **a `Taskfile.yml` that defines `all` plus the five CI-invoked contract targets (`build`, `tidy`, `lint`, `vuln`, and `check-coverage`)**. Because both local and CI runners switch together, repositories never experience a split runner state.
 
 | Stage | Repo state | `powerword review` (local) | CI workflow |
 |-------|-----------|----------------------------|-------------|
@@ -94,7 +94,7 @@ Task v3.54.0+ caches remote `includes` under `.task/remote/` in the repository r
 
 ### Why does `powerword review` (or CI) still run `make all`?
 Runner auto-detection and full Build Contract v1 conformance check slightly different task sets:
-- **Runner selection (`powerword review --local` and reusable CI workflows):** switches from `make` to `task` when `Taskfile.yml` defines `all` plus the five CI-invoked contract targets (`build`, `test`, `lint`, `vuln`, and `check-coverage`). If any of those six tasks is missing, auto-detection warns and falls back to `make`.
+- **Runner selection (`powerword review --local` and reusable CI workflows):** switches from `make` to `task` when `Taskfile.yml` defines `all` plus the five CI-invoked contract targets (`build`, `tidy`, `lint`, `vuln`, and `check-coverage`). If any of those six tasks is missing, auto-detection warns and falls back to `make`.
 - **Full Build Contract v1 conformance (`powerword doctor`):** verifies that all ten required contract targets (`all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`) are defined in the root `Taskfile.yml`. Run `powerword doctor` to see which required target is missing.
 
 ### `make <target>` says ``make: `<target>' is up to date``
