@@ -122,6 +122,32 @@ verify_override_fixture() {
   rm -rf .task
 }
 
+verify_starter_and_shim() {
+  echo "==> Verifying starter Go Taskfile and Makefile.shim..."
+  REPO_ROOT=$(CDPATH='' cd -- "$SCRIPT_DIR/../.." && pwd)
+  TMP_SHIM_DIR=$(mktemp -d)
+  trap 'rm -rf "$TMP_SHIM_DIR"' EXIT
+
+  cp -R "$SCRIPT_DIR/go-fixture/." "$TMP_SHIM_DIR/"
+  cp "$REPO_ROOT/templates/build/Makefile.shim" "$TMP_SHIM_DIR/Makefile"
+  sed "s|https://raw.githubusercontent.com/borch-ai/.github/main/taskfiles/go.yml|$REPO_ROOT/taskfiles/go.yml|g" \
+    "$REPO_ROOT/templates/build/Taskfile.go.yml" > "$TMP_SHIM_DIR/Taskfile.yml"
+
+  cd "$TMP_SHIM_DIR"
+  task --list-all | grep -q "all:"
+  POWERWORD="$SCRIPT_DIR/mock-powerword.sh" MIN_COVERAGE=50 make all
+  test -x bin/sample
+  test -f coverage.out
+  POWERWORD="$SCRIPT_DIR/mock-powerword.sh" make lint
+  make clean
+  test ! -d bin
+  test ! -f coverage.out
+
+  rm -rf "$TMP_SHIM_DIR"
+  trap - EXIT
+}
+
 verify_standard_fixture
 verify_override_fixture
+verify_starter_and_shim
 echo "==> All Taskfile self-tests passed."

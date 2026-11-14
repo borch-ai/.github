@@ -1,0 +1,14 @@
+# Transitional shim: forwards all targets to Task. See docs/taskfile-migration.md.
+.DEFAULT_GOAL := all
+
+# Targets that must be explicitly declared so directories or files on disk
+# (e.g. `build/`, `bin/`, or `all`) do not bypass Task execution.
+# Append any colliding repository-specific targets here.
+EXPLICIT_TARGETS := all build test lint fmt tidy vuln check-coverage clean install-hooks
+
+.PHONY: $(EXPLICIT_TARGETS)
+$(EXPLICIT_TARGETS):
+	@task $@
+
+%:
+	@task $@
