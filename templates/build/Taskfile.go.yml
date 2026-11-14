@@ -1,0 +1,95 @@
+# https://taskfile.dev
+# Borch-AI Starter Go Taskfile (Contract v1)
+# Requires Task v3.54.0+
+# See https://github.com/borch-ai/.github/blob/main/docs/taskfile-migration.md
+version: '3'
+
+vars:
+  # Override contract defaults here as needed:
+  # BINARIES: 'my-cli my-worker'
+  # TEST_PKGS: './...'
+  # COVERPKG: './...'
+  MIN_COVERAGE: '{{.MIN_COVERAGE | default .COVERAGE_THRESHOLD | default "91"}}'
+  POWERWORD: '{{.POWERWORD | default "powerword"}}'
+
+includes:
+  org:
+    # Pin to the latest borch-ai/.github release tag that ships taskfiles/go.yml:
+    taskfile: https://raw.githubusercontent.com/borch-ai/.github/main/taskfiles/go.yml
+    vars:
+      MIN_COVERAGE: '{{.MIN_COVERAGE}}'
+      POWERWORD: '{{.POWERWORD}}'
+
+tasks:
+  all:
+    desc: Full local quality gate (lint, vuln, check-coverage, build)
+    cmds:
+      - task: org:all
+
+  build:
+    desc: Compile application binary artifacts into bin/
+    cmds:
+      - task: org:build
+
+  test:
+    desc: Run unit tests with race detection and generate coverage profile
+    cmds:
+      - task: org:test
+
+  lint:
+    desc: Execute static analysis and linting via powerword
+    cmds:
+      - task: org:lint
+
+  fmt:
+    desc: Format Go source code in place
+    cmds:
+      - task: org:fmt
+
+  tidy:
+    desc: Normalize Go module dependencies and verify tidy hygiene
+    cmds:
+      - task: org:tidy
+
+  vuln:
+    desc: Scan Go dependencies for known vulnerabilities via powerword
+    cmds:
+      - task: org:vuln
+
+  check-coverage:
+    desc: Run tests and enforce MIN_COVERAGE threshold via powerword
+    cmds:
+      - task: org:check-coverage
+
+  clean:
+    desc: Remove build outputs and coverage profiles
+    cmds:
+      - task: org:clean
+
+  install-hooks:
+    desc: Install the standard Borch-AI git pre-push hook into .git/hooks
+    cmds:
+      - task: org:install-hooks
+
+  # ---------------------------------------------------------------------------
+  # Example 1: Overriding a standard contract task
+  # ---------------------------------------------------------------------------
+  # Because `org:all` and `org:check-coverage` invoke subtasks via root-qualified
+  # references (`:lint`, `:vuln`, `:check-coverage`, `:build`, `:test`), replacing
+  # any root task below automatically takes effect during `task all` and pre-push
+  # validation. You can still delegate to the shared implementation inside your
+  # override:
+  #
+  # build:
+  #   desc: Compile binaries with custom pre-build asset generation
+  #   cmds:
+  #     - go generate ./...
+  #     - task: org:build
+
+  # ---------------------------------------------------------------------------
+  # Example 2: Adding a repository-specific task
+  # ---------------------------------------------------------------------------
+  # integration-test:
+  #   desc: Run integration tests against live services or sibling binaries
+  #   cmds:
+  #     - go test -v -race -tags=integration -timeout=120s ./...

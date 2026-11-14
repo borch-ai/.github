@@ -84,7 +84,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
   Publish `taskfiles/go.yml` and `taskfiles/hooks.yml` implementing the contract with overridable vars and data-driven builds. Decide remote include vs. vendored copy with a `taskfile-sync` workflow.
   [Implementation Plan](plans/phase_2/task_2_2_shared_go_taskfile.md)
 
-- [ ] **Task 2.3 — Makefile Shim, Starter Taskfile & Migration Guide** `[Size: S]`
+- [x] **Task 2.3 — Makefile Shim, Starter Taskfile & Migration Guide** `[Size: S]`
   Ship a forwarding Makefile shim, a starter Taskfile with inherit/override examples, and a staged migration guide with per-repo checklist and rollout order.
   [Implementation Plan](plans/phase_2/task_2_3_shim_and_migration_guide.md)
 
