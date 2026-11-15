@@ -153,6 +153,7 @@ The Borch-AI ecosystem is standardizing on the **[Build Task Contract](https://g
 - **Target Quality Gates**: `all`, `build`, `test`, `lint`, `fmt`, `tidy`, `vuln`, `check-coverage`, `clean`, and `install-hooks`.
 - **Tooling Interface**: Standardized invocation targets for `powerword review` and `powerword doctor`.
 - **Contract Specification & Scope**: See [Build Task Contract v1](https://github.com/borch-ai/.github/blob/main/docs/build-contract.md) (Docker/Node-heavy repositories like Lamplighter, Knurl, and study-systems are explicitly out of scope for v1).
+- **Migration Guide & Templates**: See the [Taskfile Migration Guide](https://github.com/borch-ai/.github/blob/main/docs/taskfile-migration.md) and starter templates in [`templates/build/`](https://github.com/borch-ai/.github/tree/main/templates/build).
 
 ---
 
