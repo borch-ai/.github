@@ -5,10 +5,6 @@
 version: '3'
 
 vars:
-  # Override contract defaults here as needed:
-  # BINARIES: 'my-cli my-worker'
-  # TEST_PKGS: './...'
-  # COVERPKG: './...'
   MIN_COVERAGE: '{{.MIN_COVERAGE | default .COVERAGE_THRESHOLD | default "91"}}'
   POWERWORD: '{{.POWERWORD | default "powerword"}}'
 
@@ -22,6 +18,11 @@ includes:
     vars:
       MIN_COVERAGE: '{{.MIN_COVERAGE}}'
       POWERWORD: '{{.POWERWORD}}'
+      # Pass repository-specific overrides to the included taskfile here:
+      # BINARIES: 'my-cli my-worker'
+      # TEST_PKGS: './cmd/... ./internal/...'
+      # COVERPKG: './cmd/...,./internal/...'
+      # LDFLAGS: '-s -w -X github.com/borch-ai/my-repo/internal/config.Version={{.VERSION}}'
 
 tasks:
   all:

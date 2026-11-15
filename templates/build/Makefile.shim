@@ -1,5 +1,7 @@
 # Transitional shim: forwards all targets to Task. See docs/taskfile-migration.md.
 .DEFAULT_GOAL := all
+.SUFFIXES:
+MAKEFLAGS += --no-builtin-rules --no-builtin-variables
 
 # Targets that must be explicitly declared so directories or files on disk
 # (e.g. `build/`, `bin/`, or `all`) do not bypass Task execution.
