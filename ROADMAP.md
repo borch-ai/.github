@@ -88,7 +88,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
   Ship a forwarding Makefile shim, a starter Taskfile with inherit/override examples, and a staged migration guide with per-repo checklist and rollout order.
   [Implementation Plan](plans/phase_2/task_2_3_shim_and_migration_guide.md)
 
-- [ ] **Task 2.4 — Task-Aware Reusable Go CI Workflows** `[Size: M]`
+- [x] **Task 2.4 — Task-Aware Reusable Go CI Workflows** `[Size: M]`
   Add a `build-runner` (`auto`/`make`/`task`) input to `go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml`, with detection mirroring Powerword 5.12 and a pinned Task install.
   [Implementation Plan](plans/phase_2/task_2_4_task_aware_ci.md)
 
@@ -102,7 +102,7 @@ All task names are fixed in Task 2.1, so Tasks 2.1–2.4 can be worked **in para
 Phase 2 is complete when **all** of the following are true:
 - [ ] Contract v1, shared Go Taskfile, shim/guide, and Task-aware CI are released under a tagged `.github` version.
 - [ ] Kiln has completed the pilot migration (stage 3 or later per the migration guide).
-- [ ] CI self-test validates Make-only, Task, and partially migrated fixtures.
+- [x] CI self-test validates Make-only, Task, and partially migrated fixtures.
 
 ---
 

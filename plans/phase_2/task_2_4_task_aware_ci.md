@@ -1,6 +1,6 @@
 # Plan: Task 2.4: Task-Aware Reusable Go CI Workflows
 
-**Status:** Proposed
+**Status:** Completed (2026-11-14)
 **Depends On:** Task 2.1 (names only — can proceed in parallel with 2.2 and 2.3)
 
 `go-ci-standalone.yml` and `go-ci-with-sibling.yml` hardcode `make lint`, `make tidy`,
@@ -37,36 +37,36 @@ hook does — with no workflow edits in the consuming repo beyond a tag bump.
 
 ## Acceptance Criteria
 
-- [ ] New input `build-runner` (`auto` | `make` | `task`, default `auto`) on
+- [x] New input `build-runner` (`auto` | `make` | `task`, default `auto`) on
   `go-ci-standalone.yml`, `go-ci-with-sibling.yml`, and `release-go-binary.yml`.
-- [ ] New input `task-version` (default: pinned v3.x) so repos can bump independently.
-- [ ] A "Detect build runner" step outputs `runner` (`make`/`task`) and is reused by
+- [x] New input `task-version` (default: pinned v3.x) so repos can bump independently.
+- [x] A "Detect build runner" step outputs `runner` (`make`/`task`) and is reused by
   every job that runs build commands, operating inside the consumer checkout directory
   (`working-directory`, passing `inputs.repo-path` where applicable).
-- [ ] Pinned Task is installed via a SHA-pinned setup action (with version comment) or
+- [x] Pinned Task is installed via a SHA-pinned setup action (with version comment) or
   `go install github.com/go-task/task/v3/cmd/task@<version>` after discovering a Taskfile
   in `working-directory` but *prior* to probing tasks via `task --list-all --json`
   (skipped entirely for explicit Make and Make-only auto runs; installed unconditionally
   when `build-runner == task`).
-- [ ] All Make-backed quality gate steps invoke `${{ steps.detect.outputs.runner }} <target>`.
+- [x] All Make-backed quality gate steps invoke `${{ steps.detect.outputs.runner }} <target>`.
   In `release-go-binary.yml`, only the pre-release checks (`lint`, `tidy`, `vuln`,
   `check-coverage`) are runner-substituted; the downstream version-stamped cross-compilation
   into `dist/` and GitHub release asset upload remain intact.
-- [ ] The existing `coverage-threshold` input is forwarded to `check-coverage` in all
+- [x] The existing `coverage-threshold` input is forwarded to `check-coverage` in all
   relevant workflows exporting BOTH `MIN_COVERAGE` (for Task and updated Makefiles) and
   `COVERAGE_THRESHOLD` (for unchanged legacy Makefiles) in the step environment
   (`MIN_COVERAGE: ${{ inputs.coverage-threshold }}` and
   `COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}`). For Make invocations, also
   supply both variables as command-line arguments
   (`make check-coverage MIN_COVERAGE=... COVERAGE_THRESHOLD=...`).
-- [ ] Harden-runner remains the first step; egress audit covers the Task download host.
-- [ ] `ci-self-test.yml` exercises both runners against fixtures (Make-only fixture, full
+- [x] Harden-runner remains the first step; egress audit covers the Task download host.
+- [x] `ci-self-test.yml` exercises both runners against fixtures (Make-only fixture, full
   Task fixture from Task 2.2, and a Stage 1 partial fixture missing `all` / missing a CI task
   to assert clean fallback to Make with warning annotations).
-- [ ] `ci-self-test.yml` validates non-default `coverage-threshold` enforcement under both
+- [x] `ci-self-test.yml` validates non-default `coverage-threshold` enforcement under both
   runners (Make runner testing both `COVERAGE_THRESHOLD` and `MIN_COVERAGE`; Task runner testing
   `MIN_COVERAGE`).
-- [ ] Released under a new tag; Dependabot picks it up in consumer repos.
+- [x] Released under a new tag; Dependabot picks it up in consumer repos.
 
 ## Proposed Changes
 
@@ -78,10 +78,16 @@ hook does — with no workflow edits in the consuming repo beyond a tag bump.
 - In `release-go-binary.yml`, parameterize `lint`, `tidy`, `vuln`, and `check-coverage`
   with the detected runner while keeping the custom cross-compilation matrix into `dist/`
   unchanged.
+- Inline the `Check for Taskfile`, `Install Task`, and `Detect build runner` steps directly
+  in the `workflow_call` jobs so external consumer repositories (whose `$GITHUB_WORKSPACE`
+  does not contain `borch-ai/.github` local composite actions) execute without requiring an
+  extra `.github` checkout.
 
 ### `.github/actions/setup-build-runner/action.yml` (new, recommended)
 
-- Composite action shared by all three workflows to avoid duplicated logic.
+- Composite action (backed by `check-taskfile.sh` and `detect-runner.sh`) implementing the
+  shared detection and Task installation contract, exercised by `ci-self-test.yml` and
+  available to direct callers.
 - Inputs: `build-runner`, `task-version`, `required-tasks`, `working-directory` (default: `.`).
   Output: `runner`.
 - Logic:
