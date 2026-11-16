@@ -11,3 +11,4 @@ var version = "dev"
 func main() {
 	fmt.Printf("%s (%s)\n", greet.Hello(), version)
 }
+

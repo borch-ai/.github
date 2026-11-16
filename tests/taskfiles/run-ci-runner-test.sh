@@ -138,16 +138,31 @@ if [ "$FIXTURE" = "task" ]; then
 
   # 4. build-runner=auto fails when Taskfile is partial and no Makefile exists
   TMP_NO_MAKE=$(mktemp -d)
-  cp "$SCRIPT_DIR/go-partial-fixture/Taskfile.yml" "$TMP_NO_MAKE/Taskfile.yml"
+  sed "s|../../../taskfiles/go.yml|$REPO_ROOT/taskfiles/go.yml|g" \
+    "$SCRIPT_DIR/go-partial-fixture/Taskfile.yml" > "$TMP_NO_MAKE/Taskfile.yml"
+  task -d "$TMP_NO_MAKE" --list-all --json >/dev/null
   : > "$TMP_OUT"
   if (cd "$TMP_NO_MAKE" && GITHUB_OUTPUT="$TMP_OUT" BUILD_RUNNER=auto TASKFILE_NAME=Taskfile.yml "$DETECT_SCRIPT" >/dev/null 2>&1); then
     rm -rf "$TMP_NO_MAKE" "$TMP_OUT"
     echo "ERROR: Expected build-runner=auto to fail when partial Taskfile has no Makefile fallback" >&2
     exit 1
   fi
-  rm -rf "$TMP_NO_MAKE" "$TMP_OUT"
+  rm -rf "$TMP_NO_MAKE"
+
+  # 5. build-runner=auto fails fast when task --list-all --json fails even if a Makefile exists
+  TMP_BROKEN=$(mktemp -d)
+  cp "$SCRIPT_DIR/go-partial-fixture/Taskfile.yml" "$TMP_BROKEN/Taskfile.yml"
+  cp "$SCRIPT_DIR/go-partial-fixture/Makefile" "$TMP_BROKEN/Makefile"
+  : > "$TMP_OUT"
+  if (cd "$TMP_BROKEN" && GITHUB_OUTPUT="$TMP_OUT" BUILD_RUNNER=auto TASKFILE_NAME=Taskfile.yml "$DETECT_SCRIPT" >/dev/null 2>&1); then
+    rm -rf "$TMP_BROKEN" "$TMP_OUT"
+    echo "ERROR: Expected build-runner=auto to fail when task --list-all --json fails, even if Makefile exists" >&2
+    exit 1
+  fi
+  rm -rf "$TMP_BROKEN" "$TMP_OUT"
 fi
 
 "$DETECTED_RUNNER" clean
 rm -rf .task
 echo "==> Fixture '$FIXTURE' passed all runner and coverage threshold checks."
+

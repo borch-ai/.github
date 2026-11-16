@@ -151,6 +151,18 @@ jobs:
               echo "::error::build-runner is set to 'task', but no Taskfile was found in $(pwd)"
               exit 1
             fi
+            TASK_ERR_FILE=$(mktemp)
+            if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+              TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+              rm -f "$TASK_ERR_FILE"
+              echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+              exit 1
+            fi
+            rm -f "$TASK_ERR_FILE"
+            if ! printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' >/dev/null 2>&1; then
+              echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+              exit 1
+            fi
             echo "runner=task" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -158,9 +170,17 @@ jobs:
             echo "runner=make" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          AVAILABLE_TASKS=""
-          if TASK_JSON=$(task --list-all --json 2>/dev/null); then
-            AVAILABLE_TASKS=$(printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' 2>/dev/null || true)
+          TASK_ERR_FILE=$(mktemp)
+          if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+            TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+            rm -f "$TASK_ERR_FILE"
+            echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+            exit 1
+          fi
+          rm -f "$TASK_ERR_FILE"
+          if ! AVAILABLE_TASKS=$(printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' 2>/dev/null); then
+            echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+            exit 1
           fi
           MISSING=""
           for req in $REQUIRED_TASKS; do

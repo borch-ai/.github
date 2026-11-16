@@ -30,3 +30,4 @@ check-coverage: test
 
 clean:
 	rm -rf bin coverage coverage.out
+
