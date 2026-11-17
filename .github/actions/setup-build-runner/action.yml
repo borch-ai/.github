@@ -51,4 +51,3 @@ runs:
         TASKFILE_NAME: ${{ steps.check-taskfile.outputs.taskfile }}
         REQUIRED_TASKS: ${{ inputs.required-tasks }}
       run: '"$GITHUB_ACTION_PATH/detect-runner.sh"'
-

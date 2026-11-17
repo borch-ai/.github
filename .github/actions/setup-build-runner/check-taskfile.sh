@@ -32,4 +32,3 @@ if [ "$BUILD_RUNNER" = "task" ] || { [ "$BUILD_RUNNER" = "auto" ] && [ -n "$TASK
 else
   echo "install-task=false" >> "$GITHUB_OUTPUT"
 fi
-
