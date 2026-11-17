@@ -18,6 +18,8 @@ This repository acts as the **Central Nexus & Configuration Registry** for the `
 ├── CONTRIBUTING.md           # Organization-wide contribution guidelines
 ├── CODEOWNERS                # Shared repository ownership assignments
 └── .github/
+    ├── actions/
+    │   └── setup-build-runner/      # Composite action for Make/Task runner detection
     ├── workflows/            # Reusable GitHub Actions Workflows
     │   ├── ci-self-test.yml         # Self-test validation of workflows
     │   ├── go-ci-with-sibling.yml   # Go project testing with a sibling package

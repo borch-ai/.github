@@ -13,6 +13,14 @@ on:
         description: "Minimum unit test coverage percentage (default: 91)"
         type: number
         default: 91
+      build-runner:
+        description: "Build runner to use: auto, make, or task (default: auto)"
+        type: string
+        default: "auto"
+      task-version:
+        description: "Pinned Task CLI version to install when Task is needed (default: 3.54.0)"
+        type: string
+        default: "3.54.0"
 
 permissions:
   contents: read
@@ -102,12 +110,119 @@ jobs:
         if: env.CI_APP_ID != ''
         run: GOPRIVATE="github.com/borch-ai/*" go install github.com/borch-ai/powerword/cmd/powerword@latest
 
+      # Inline runner detection (mirrors .github/actions/setup-build-runner) so
+      # workflow_call works in consumer repositories whose workspace does not
+      # contain borch-ai/.github's local composite action path.
+      - name: Check for Taskfile
+        id: check-taskfile
+        env:
+          BUILD_RUNNER: ${{ inputs.build-runner }}
+        run: |
+          case "$BUILD_RUNNER" in
+            auto|make|task) ;;
+            *)
+              echo "::error::Invalid build-runner '$BUILD_RUNNER' (must be auto, make, or task)"
+              exit 1
+              ;;
+          esac
+          TASKFILE_NAME=""
+          for name in Taskfile.yml taskfile.yml Taskfile.yaml taskfile.yaml Taskfile.dist.yml taskfile.dist.yml Taskfile.dist.yaml taskfile.dist.yaml; do
+            if [ -f "$name" ]; then
+              TASKFILE_NAME="$name"
+              break
+            fi
+          done
+          echo "taskfile=$TASKFILE_NAME" >> "$GITHUB_OUTPUT"
+          if [ "$BUILD_RUNNER" = "task" ] || { [ "$BUILD_RUNNER" = "auto" ] && [ -n "$TASKFILE_NAME" ]; }; then
+            echo "install-task=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "install-task=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Task
+        if: steps.check-taskfile.outputs.install-task == 'true'
+        uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
+        with:
+          version: ${{ inputs.task-version }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect build runner
+        id: detect
+        env:
+          BUILD_RUNNER: ${{ inputs.build-runner }}
+          TASKFILE_NAME: ${{ steps.check-taskfile.outputs.taskfile }}
+          REQUIRED_TASKS: "all lint tidy vuln check-coverage build"
+        run: |
+          if [ "$BUILD_RUNNER" = "make" ]; then
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$BUILD_RUNNER" = "task" ]; then
+            if [ -z "$TASKFILE_NAME" ] || [ ! -f "$TASKFILE_NAME" ]; then
+              echo "::error::build-runner is set to 'task', but no Taskfile was found in $(pwd)"
+              exit 1
+            fi
+            TASK_ERR_FILE=$(mktemp)
+            if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+              TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+              rm -f "$TASK_ERR_FILE"
+              echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+              exit 1
+            fi
+            rm -f "$TASK_ERR_FILE"
+            if ! printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' >/dev/null 2>&1; then
+              echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+              exit 1
+            fi
+            echo "runner=task" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$TASKFILE_NAME" ] || [ ! -f "$TASKFILE_NAME" ]; then
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TASK_ERR_FILE=$(mktemp)
+          if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+            TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+            rm -f "$TASK_ERR_FILE"
+            echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+            exit 1
+          fi
+          rm -f "$TASK_ERR_FILE"
+          if ! AVAILABLE_TASKS=$(printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' 2>/dev/null); then
+            echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+            exit 1
+          fi
+          MISSING=""
+          for req in $REQUIRED_TASKS; do
+            if ! printf '%s\n' "$AVAILABLE_TASKS" | grep -Fxq "$req"; then
+              if [ -z "$MISSING" ]; then
+                MISSING="$req"
+              else
+                MISSING="$MISSING, $req"
+              fi
+            fi
+          done
+          if [ -z "$MISSING" ]; then
+            echo "runner=task" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -f "Makefile" ] || [ -f "makefile" ] || [ -f "GNUmakefile" ]; then
+            echo "::warning::$TASKFILE_NAME found but missing required contract task(s) ($MISSING); falling back to Makefile"
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::error::$TASKFILE_NAME found but missing required contract task(s) ($MISSING) and no Makefile present"
+          exit 1
+
       - name: Run Linter
-        run: make lint
+        run: ${{ steps.detect.outputs.runner }} lint
 
   security-and-test:
     name: Security & Tests
     runs-on: ubuntu-latest
+    env:
+      CI_APP_ID: ${{ secrets.CI_APP_ID }}
     steps:
       - name: Harden Runner
         uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
@@ -123,14 +238,142 @@ jobs:
           go-version-file: go.mod
           cache: true
 
+      - name: Generate GitHub App Token
+        if: env.CI_APP_ID != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app-token
+        with:
+          app-id: ${{ secrets.CI_APP_ID }}
+          private-key: ${{ secrets.CI_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Configure Git for Private Modules
+        if: env.CI_APP_ID != ''
+        run: |
+          git config --global url."https://x-access-token:${{ steps.app-token.outputs.token }}@github.com/".insteadOf "https://github.com/"
+
+      - name: Install powerword
+        if: env.CI_APP_ID != ''
+        run: GOPRIVATE="github.com/borch-ai/*" go install github.com/borch-ai/powerword/cmd/powerword@latest
+
+      - name: Check for Taskfile
+        id: check-taskfile
+        env:
+          BUILD_RUNNER: ${{ inputs.build-runner }}
+        run: |
+          case "$BUILD_RUNNER" in
+            auto|make|task) ;;
+            *)
+              echo "::error::Invalid build-runner '$BUILD_RUNNER' (must be auto, make, or task)"
+              exit 1
+              ;;
+          esac
+          TASKFILE_NAME=""
+          for name in Taskfile.yml taskfile.yml Taskfile.yaml taskfile.yaml Taskfile.dist.yml taskfile.dist.yml Taskfile.dist.yaml taskfile.dist.yaml; do
+            if [ -f "$name" ]; then
+              TASKFILE_NAME="$name"
+              break
+            fi
+          done
+          echo "taskfile=$TASKFILE_NAME" >> "$GITHUB_OUTPUT"
+          if [ "$BUILD_RUNNER" = "task" ] || { [ "$BUILD_RUNNER" = "auto" ] && [ -n "$TASKFILE_NAME" ]; }; then
+            echo "install-task=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "install-task=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Install Task
+        if: steps.check-taskfile.outputs.install-task == 'true'
+        uses: arduino/setup-task@c0bc642852239c2689f73f4ea6459c29405f3c52 # v3.0.0
+        with:
+          version: ${{ inputs.task-version }}
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Detect build runner
+        id: detect
+        env:
+          BUILD_RUNNER: ${{ inputs.build-runner }}
+          TASKFILE_NAME: ${{ steps.check-taskfile.outputs.taskfile }}
+          REQUIRED_TASKS: "all lint tidy vuln check-coverage build"
+        run: |
+          if [ "$BUILD_RUNNER" = "make" ]; then
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ "$BUILD_RUNNER" = "task" ]; then
+            if [ -z "$TASKFILE_NAME" ] || [ ! -f "$TASKFILE_NAME" ]; then
+              echo "::error::build-runner is set to 'task', but no Taskfile was found in $(pwd)"
+              exit 1
+            fi
+            TASK_ERR_FILE=$(mktemp)
+            if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+              TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+              rm -f "$TASK_ERR_FILE"
+              echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+              exit 1
+            fi
+            rm -f "$TASK_ERR_FILE"
+            if ! printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' >/dev/null 2>&1; then
+              echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+              exit 1
+            fi
+            echo "runner=task" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -z "$TASKFILE_NAME" ] || [ ! -f "$TASKFILE_NAME" ]; then
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          TASK_ERR_FILE=$(mktemp)
+          if ! TASK_JSON=$(task --list-all --json 2>"$TASK_ERR_FILE"); then
+            TASK_ERR=$(tr '\n' ' ' < "$TASK_ERR_FILE")
+            rm -f "$TASK_ERR_FILE"
+            echo "::error::Failed to evaluate $TASKFILE_NAME with 'task --list-all --json' (remote includes in unattended CI must pin 'checksum:'): $TASK_ERR"
+            exit 1
+          fi
+          rm -f "$TASK_ERR_FILE"
+          if ! AVAILABLE_TASKS=$(printf '%s\n' "$TASK_JSON" | jq -r '.tasks[]?.name // empty' 2>/dev/null); then
+            echo "::error::Failed to parse JSON output from 'task --list-all --json' for $TASKFILE_NAME"
+            exit 1
+          fi
+          MISSING=""
+          for req in $REQUIRED_TASKS; do
+            if ! printf '%s\n' "$AVAILABLE_TASKS" | grep -Fxq "$req"; then
+              if [ -z "$MISSING" ]; then
+                MISSING="$req"
+              else
+                MISSING="$MISSING, $req"
+              fi
+            fi
+          done
+          if [ -z "$MISSING" ]; then
+            echo "runner=task" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          if [ -f "Makefile" ] || [ -f "makefile" ] || [ -f "GNUmakefile" ]; then
+            echo "::warning::$TASKFILE_NAME found but missing required contract task(s) ($MISSING); falling back to Makefile"
+            echo "runner=make" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "::error::$TASKFILE_NAME found but missing required contract task(s) ($MISSING) and no Makefile present"
+          exit 1
+
       - name: Check Dependency Tidy Hygiene
-        run: make tidy && git diff --exit-code go.mod go.sum
+        run: ${{ steps.detect.outputs.runner }} tidy && git diff --exit-code go.mod go.sum
 
       - name: Run Vulnerability Scan
-        run: make vuln
+        run: ${{ steps.detect.outputs.runner }} vuln
 
       - name: Run Tests & Check Coverage
-        run: make check-coverage
+        env:
+          MIN_COVERAGE: ${{ inputs.coverage-threshold }}
+          COVERAGE_THRESHOLD: ${{ inputs.coverage-threshold }}
+        run: |
+          if [ "${{ steps.detect.outputs.runner }}" = "make" ]; then
+            make check-coverage "MIN_COVERAGE=${MIN_COVERAGE}" "COVERAGE_THRESHOLD=${COVERAGE_THRESHOLD}"
+          else
+            ${{ steps.detect.outputs.runner }} check-coverage
+          fi
 
       - name: Compile Binary
-        run: make build
+        run: ${{ steps.detect.outputs.runner }} build

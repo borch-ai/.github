@@ -6,6 +6,7 @@ on:
   push:
     branches: [main]
     paths:
+      - '.github/actions/**'
       - '.github/workflows/**'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/pull_request_template.md'
@@ -45,6 +46,11 @@ jobs:
               brackets: disable
               comments: disable
 
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@00cae500b08a931fb5698e11e79bfbd38e612a38 # 2.0.0
+        with:
+          ignore_paths: node_modules
+
       - name: Run actionlint
         uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
         with:
@@ -76,6 +82,48 @@ jobs:
 
       - name: Verify Shared Taskfiles
         run: ./tests/taskfiles/run-self-test.sh
+
+  test-build-runner:
+    name: Test Build Runner (${{ matrix.fixture }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - fixture: make
+            working-dir: tests/taskfiles/go-make-fixture
+          - fixture: task
+            working-dir: tests/taskfiles/go-fixture
+          - fixture: task-partial
+            working-dir: tests/taskfiles/go-partial-fixture
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1
+        with:
+          egress-policy: audit
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: '1.22'
+          cache: false
+
+      - name: Detect build runner
+        id: detect
+        uses: ./.github/actions/setup-build-runner
+        with:
+          build-runner: auto
+          working-directory: ${{ matrix.working-dir }}
+
+      - name: Verify runner selection and coverage thresholds
+        env:
+          FIXTURE: ${{ matrix.fixture }}
+          DETECTED_RUNNER: ${{ steps.detect.outputs.runner }}
+          VERIFY_NO_TASK_INSTALLED: "true"
+        run: ./tests/taskfiles/run-ci-runner-test.sh "$FIXTURE" "$DETECTED_RUNNER"
 
   pr-title:
     name: Validate PR Title
